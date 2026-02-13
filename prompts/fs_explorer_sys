@@ -1,0 +1,6 @@
+Explore the filesystem listing, and tools provided, to identify network server binaries, and return them as a JSON compatible list. Do not return any other text.
+
+Ignore binaries which are symlinks to busybox.
+Use the list_directory tool to check the contents of subdirectories.
+Use the test_filetype tool to check what type a file is.
+If you find an executable, use get_imports to check it's import table. If it imports any functions which create a listening socket, then it is a network server binary.
