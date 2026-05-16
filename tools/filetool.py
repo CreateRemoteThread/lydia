@@ -29,7 +29,10 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
         data = f.read()
       else:
         data = f.read(bytes)
-    return data
+    if len(data) >= MAX_DATA:
+      return "error: trying to return %d bytes, can only read %d at once" % (len(data),MAX_DATA)
+    else:
+      return data
   else:
     new_realpath = expanduser(normpath(FN_PREFIX + "/" + realpath))
     if os.path.isfile(new_realpath):
@@ -41,10 +44,13 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
           data = f.read()
         else:
           data = f.read(bytes)
-      return data
+      if len(data) >= MAX_DATA:
+        return "error: trying to return %d bytes, can only read %d at once" % (len(data),MAX_DATA)
+      else:
+        return data
     else:
       print("warn: read from '%s' blocked by sandbox" % filename)
-      return None
+      return "error: cannot read file, no permission"
 
 @function_tool
 def file_write(filename: Annotated[str, "Name of the file to write to"], data: Annotated[str, "Data to write"], append: Annotated[bool, "True to append to end of file, False to write over existing data"]):

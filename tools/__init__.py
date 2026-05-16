@@ -20,7 +20,16 @@ class ToolLoader:
     self.registerFunction("r2_init",r2tool.r2_init, "Use r2_init to initialize radare2 on a file.")
     self.registerFunction("r2_cmd",r2tool.r2_cmd, "Use r2_cmd to run a radare2 command.")
 
+  def fetch_toolbox(self,name):
+    out = []
+    for i in self.tools.keys():
+      if name in i:
+        out.append(i)
+    print("info: fetch_toolbox(%s) returned %d results" % (name,len(out)))
+    return out
+
   def fetch(self,name):
+    print("info: attempting to grab tool '%s'" % name)
     if name in self.tools.keys():
       return self.tools[name]
     else:

@@ -1,3 +1,5 @@
 # lydia
 
-This is an interface for using LLM's (OpenAI) with radare2. This is experimental and provided as-is: you probably want to use r2ai or radare2-mcp instead.
+This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down to what is absolutely needed.
+
+You probably shouldn't be here, you probably want /r/vibecoding instead.

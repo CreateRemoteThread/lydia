@@ -45,7 +45,7 @@ async def main():
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
   CFG_MODEL = None
-  args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:",["prompt=","system=","tool=","model=","persona="])
+  args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:",["prompt=","system=","tool=","model=","persona=","toolbox="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       CFG_USR_PROMPT = loadPrompt(val)
@@ -53,6 +53,8 @@ async def main():
       CFG_SYS_PROMPT = loadPrompt(val)
     elif arg in ["-t","--tool"]:
       CFG_TOOLS.append(val)
+    elif arg == "--toolbox":
+      CFG_TOOLS += Toolbox.fetch_toolbox(val)
     elif arg in ["-m","--model"]:
       CFG_MODEL = val
     elif arg == "--persona":
