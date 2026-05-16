@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+import tools.filetool
+import tools.r2tool
+
+class ToolLoader:
+  def registerFunction(self,name,function,func_desc):
+    if name in self.tools.keys():
+      print("warning: ToolLoader trying to register '%s', already loaded")
+    else: 
+      self.tools[name] = function
+      self.tooldesc[name] = func_desc
+  
+  def __init__(self):
+    self.tools = {}
+    self.tooldesc = {}
+    self.registerFunction("file_read",filetool.file_read, "Use file_read tool to read files.")
+    self.registerFunction("file_write",filetool.file_write, "Use file_write tool to write files.")
+    self.registerFunction("file_glob",filetool.file_glob, "Use file_glob tool to search for files.")
+    self.registerFunction("r2_init",r2tool.r2_init, "Use r2_init to initialize radare2 on a file.")
+    self.registerFunction("r2_cmd",r2tool.r2_cmd, "Use r2_cmd to run a radare2 command.")
+
+  def fetch(self,name):
+    if name in self.tools.keys():
+      return self.tools[name]
+    else:
+      print("warning: ToolLoader cannot fetch '%s', not found")
+      return None
+
+  def prompthelper(self,toolnames):
+    if len(toolnames) == 0:
+      return ""
+    else:
+      return " ".join([self.tooldesc[name] for name in toolnames])
