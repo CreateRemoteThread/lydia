@@ -153,6 +153,9 @@ class Agent:
           return resp_obj["content"][0]["text"]
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
+        else:
+          print("fatal: don't know how to handle response object type '%s'" % resp_obj["type"])
+          sys.exit(-1)
 
 if __name__ == "__main__":
   a = Agent(tools=[ask_user])
