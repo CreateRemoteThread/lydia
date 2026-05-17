@@ -9,7 +9,6 @@ import subprocess
 
 VM_SSHARGS = os.getenv("VM_SSHARGS",default=None)
 
-
 def shell_exec(command: Annotated[str, "The command to run"]):
   global VM_SSHARGS
   if VM_SSHARGS is None:
@@ -22,5 +21,5 @@ def shell_exec(command: Annotated[str, "The command to run"]):
   new_c = VM_SSHARGS + " '" + command + "'"
   print("info: shell_exec('%s') called" % new_c)
   result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-  print(result.stdout)
+  # print(result.stdout)
   return result.stdout

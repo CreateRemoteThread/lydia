@@ -3,7 +3,6 @@
 import sys
 import os
 import asyncio
-from openai import OpenAI
 from typing import Annotated
 import core.agent
 import tools
@@ -42,10 +41,16 @@ async def main():
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
   CFG_MODEL = "gpt-4o"
-  args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:",["prompt=","system=","tool=","model=","persona=","toolbox="])
+  CFG_REASONING = None
+  args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:r:",["prompt=","system=","tool=","model=","reasoning=","persona=","toolbox="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       CFG_USR_PROMPT = loadPrompt(val)
+    elif arg in ["-r","--reasoning"]:
+      if val in ["low","medium","high"]:
+        CFG_REASONING = val
+      else:
+        print("warn: r must be 'low', 'medium' or 'high' - reasoning remains None")
     elif arg in ["-s","--sysprompt"]:
       CFG_SYS_PROMPT = loadPrompt(val)
     elif arg in ["-t","--tool"]:
@@ -62,7 +67,8 @@ async def main():
       else:
         print("warn: cannot open persona '%s'" % val)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
-  agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL)
+  print(CFG_MODEL)
+  agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
   if CFG_USR_PROMPT is None:
     print("fatal: you must at least a user prompt with -p")
     sys.exit(-1)

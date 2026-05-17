@@ -72,17 +72,19 @@ def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=10.0, tools=[]):
+  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=10.0, tools=[], reasoning=None):
     self.api_key = api_key
     self.base_url = base_url
     self.model = model
     self.timeout = timeout
     self.req = {}
+    if reasoning is not None:
+      self.req["reasoning"] = {"effort":reasoning}
     self.req["include"] = []
     self.req["input"] = []
     self.req["instructions"] = sys_prompt
     self.req["metadata"] = None
-    self.req["model"] = "gpt-4o"
+    self.req["model"] = model
     self.req["stream"] = False  
     self.tools = tools   # this is our copy
     if len(tools) > 0:   # this copy goes to the llm server
@@ -123,37 +125,34 @@ class Agent:
         print(json.dumps(resp.json(),indent=2))
         print("<<<" * 10)
       outputs = resp.json()["output"]
-      # print(json.dumps(outputs,indent=2))
-      if len(outputs) != 1:
-        print("fatal: cannot handle simultaneous tool calls yet")
-        return "fatal: multiple tool calls, returning from req_loop"
-      resp_obj = outputs[0]
-      if resp_obj["type"] == "function_call":
-        fn_obj = None
-        for i in self.tools:
-          if i.__name__ == resp_obj["name"]:
-            fn_obj = i
-            break
-        if fn_obj is None:
-          print("fatal: could not execute call '%s'" %  resp_obj["name"])
-          return "fatal: could not execute call '%s'" % resp_obj["name"]
-        fn_args = json.loads(resp_obj["arguments"])
-        respval = fn_obj(**fn_args)
-        self.req["input"].append({
-          "arguments":resp_obj["arguments"],
-          "call_id":resp_obj["id"],
-          "name":resp_obj["name"],
-          "type":"function_call",
-          "status":"completed"
-        })
-        self.req["input"].append({
-          "call_id":resp_obj["id"],
-          "output":respval,
-          "type":"function_call_output",
-        })
-        continue
-      elif resp_obj["type"] == "message":
-        return resp_obj["content"][0]["text"]
+      for resp_obj in outputs:
+        if resp_obj["type"] == "function_call":
+          fn_obj = None
+          for i in self.tools:
+            if i.__name__ == resp_obj["name"]:
+              fn_obj = i
+              break
+          if fn_obj is None:
+            print("fatal: could not execute call '%s'" %  resp_obj["name"])
+            return "fatal: could not execute call '%s'" % resp_obj["name"]
+          fn_args = json.loads(resp_obj["arguments"])
+          respval = fn_obj(**fn_args)
+          self.req["input"].append({
+            "arguments":resp_obj["arguments"],
+            "call_id":resp_obj["id"],
+            "name":resp_obj["name"],
+            "type":"function_call",
+            "status":"completed"
+          })
+          self.req["input"].append({
+            "call_id":resp_obj["id"],
+            "output":respval,
+            "type":"function_call_output",
+          })
+        elif resp_obj["type"] == "message":
+          return resp_obj["content"][0]["text"]
+        elif resp_obj["type"] == "reasoning":
+          print("Thinking...")
 
 if __name__ == "__main__":
   a = Agent(tools=[ask_user])

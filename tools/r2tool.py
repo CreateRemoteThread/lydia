@@ -12,13 +12,12 @@ R2_CLIENT = None
 FN_PREFIX = os.getenv("FN_SANDBOX",default=None)
 if FN_PREFIX is not None:
   FN_PREFIX = expanduser(normpath(FN_PREFIX))
-else:
-  print("fatal: you must specify FN_SANDBOX env")
-  sys.exit(-1)
-
 
 def r2_init(filename: Annotated[str,"The name of the file to analyze"]):
   global R2_CLIENT, FN_PREFIX
+  if FN_PREFIX is None:
+    print("fatal: you must set FN_SANDBOX")
+    sys.exit(-1)
   real_name = expanduser(normpath(filename))
   if real_name.startswith(FN_PREFIX) is False:
     print("info: r2init converting relative path to real path")
