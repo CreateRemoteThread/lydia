@@ -3,15 +3,12 @@
 import sys
 import os
 import asyncio
-import subprocess
 from openai import OpenAI
 from typing import Annotated
-from agents import Agent, Runner, function_tool
+import core.agent
 import tools
-from pydantic import BaseModel
 import getopt
 
-@function_tool
 def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
 
@@ -44,7 +41,7 @@ async def main():
   CFG_PERSONALITY = "You are a helpful assistant."
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
-  CFG_MODEL = None
+  CFG_MODEL = "gpt-4o"
   args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:",["prompt=","system=","tool=","model=","persona=","toolbox="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
@@ -64,28 +61,16 @@ async def main():
           CFG_PERSONALITY = f.read()
       else:
         print("warn: cannot open persona '%s'" % val)
-  if CFG_MODEL is not None:
-    print("info: starting with model '%s'" % CFG_MODEL)
-    agent = Agent(
-      name="GenericPrompt",
-      instructions=CFG_PERSONALITY + " " + CFG_SYS_PROMPT,
-      tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],
-      model=CFG_MODEL,
-    )
-  else:
-    agent = Agent(
-      name="GenericPrompt",
-      instructions=CFG_SYS_PROMPT,
-      tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],
-    )
+  real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
+  agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL)
   if CFG_USR_PROMPT is None:
     print("fatal: you must at least a user prompt with -p")
     sys.exit(-1)
   if len(CFG_TOOLS) >= 1:
     print("info: using tools, attaching prompt helper string")
     CFG_USR_PROMPT += "\n" + Toolbox.prompthelper(CFG_TOOLS)
-  result = await Runner.run(agent, input=CFG_USR_PROMPT)
-  print(result.final_output)
+  result = agent.req_loop(CFG_USR_PROMPT)
+  print(result)
 
 if __name__ == "__main__":
   asyncio.run(main())

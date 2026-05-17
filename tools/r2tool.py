@@ -16,7 +16,7 @@ else:
   print("fatal: you must specify FN_SANDBOX env")
   sys.exit(-1)
 
-@function_tool
+
 def r2_init(filename: Annotated[str,"The name of the file to analyze"]):
   global R2_CLIENT, FN_PREFIX
   real_name = expanduser(normpath(filename))
@@ -30,7 +30,7 @@ def r2_init(filename: Annotated[str,"The name of the file to analyze"]):
   R2_CLIENT = r2pipe.open(real_name)
   return "ok"
 
-@function_tool
+
 def r2_cmd(command: Annotated[str,"The command to run"]):
   global R2_CLIENT
   if R2_CLIENT is None:

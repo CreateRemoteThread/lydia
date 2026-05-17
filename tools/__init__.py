@@ -2,6 +2,7 @@
 
 import tools.filetool
 import tools.r2tool
+import tools.vmtool
 
 class ToolLoader:
   def registerFunction(self,name,function,func_desc):
@@ -19,6 +20,7 @@ class ToolLoader:
     self.registerFunction("file_glob",filetool.file_glob, "Use file_glob tool to search for files.")
     self.registerFunction("r2_init",r2tool.r2_init, "Use r2_init to initialize radare2 on a file.")
     self.registerFunction("r2_cmd",r2tool.r2_cmd, "Use r2_cmd to run a radare2 command.")
+    self.registerFunction("shell_exec",vmtool.shell_exec, "Use shell_exec to execute a shell command.")
 
   def fetch_toolbox(self,name):
     out = []
