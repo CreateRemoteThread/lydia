@@ -20,7 +20,10 @@ class ToolLoader:
     self.registerFunction("file_glob",filetool.file_glob, "Use file_glob tool to search for files.")
     self.registerFunction("r2_init",r2tool.r2_init, "Use r2_init to initialize radare2 on a file.")
     self.registerFunction("r2_cmd",r2tool.r2_cmd, "Use r2_cmd to run a radare2 command.")
-    self.registerFunction("shell_exec",vmtool.shell_exec, "Use shell_exec to execute a shell command.")
+    self.registerFunction("shell_exec",vmtool.shell_exec, "Use shell_exec to run a non-interactive shell process.")
+    self.registerFunction("shell_interactive_start",vmtool.shell_interactive_start, "Use shell_interactive_start to start an interactive shell process.")
+    self.registerFunction("shell_interactive_read",vmtool.shell_interactive_read, "Use shell_interactive_read to read from an interactive process.")
+    self.registerFunction("shell_interactive_write",vmtool.shell_interactive_write, "Use shell_interactive_write to write to an interactive process.")
 
   def fetch_toolbox(self,name):
     out = []

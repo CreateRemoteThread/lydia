@@ -4,6 +4,7 @@ This is an extremely bare-bones tool, meant for interfacing with LLM's while kee
 
 Use the following command line args:
 ```
+- -i/--interactive: interactive mode (i.e. chat interface)
 - -p/--prompt: set the prompt
 - -m/--model: set the model
 - -t/--tool: load a single tool

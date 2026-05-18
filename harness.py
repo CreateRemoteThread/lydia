@@ -35,16 +35,19 @@ def loadPrompt(prompt):
 
 def main():
   global Toolbox
+  CFG_INTERACTIVE = False
   CFG_USR_PROMPT = None
   CFG_PERSONALITY = "You are a helpful assistant."
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
   CFG_MODEL = "gpt-4o"
   CFG_REASONING = None
-  args,extra = getopt.getopt(sys.argv[1:],"p:s:t:m:r:",["prompt=","system=","tool=","model=","reasoning=","persona=","toolbox="])
+  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       CFG_USR_PROMPT = loadPrompt(val)
+    elif arg in ["-i","--interactive"]:
+      CFG_INTERACTIVE = True
     elif arg in ["-r","--reasoning"]:
       if val in ["low","medium","high"]:
         CFG_REASONING = val
@@ -74,8 +77,19 @@ def main():
   if len(CFG_TOOLS) >= 1:
     print("info: using tools, attaching prompt helper string")
     CFG_USR_PROMPT += "\n" + Toolbox.prompthelper(CFG_TOOLS)
-  result = agent.req_loop(CFG_USR_PROMPT)
-  print(result)
+  if CFG_INTERACTIVE is False:
+    result = agent.req_loop(CFG_USR_PROMPT)
+    print(result)
+    sys.exit(0)
+  else:
+    result = agent.req_loop(CFG_USR_PROMPT)
+    while True:
+      print(result)
+      new_prompt = input(" > ").rstrip() 
+      if new_prompt in ["/exit","/quit",":wq",":q","quit()"]:
+        break
+      agent.req_loop(new_prompt)
+    print("Bye!")
 
 if __name__ == "__main__":
   main()
