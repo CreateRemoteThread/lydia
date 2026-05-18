@@ -14,12 +14,15 @@ VM_SSHARGS = os.getenv("VM_SSHARGS",default=None)
 PROCESS_LOCK = None
 PROCESS_RD_QUEUE = None
 PROCESS_RD_THREAD = None
+PROCESS_RD_STOP = False
 
 # courtesy of gpt-4o
 # neat trick!
 def async_reader(pipe, q):
-  global PROCESS_RD_QUEUE
+  global PROCESS_RD_QUEUE, PROCESS_RD_STOP
   for line in iter(pipe.readline, ''):
+    if PROCESS_RD_STOP is True:
+      return
     PROCESS_RD_QUEUE.put(line)
 
 def shell_exec(command: Annotated[str, "The command to run"]):
@@ -83,10 +86,10 @@ def shell_interactive_read():
     except queue.Empty:
       break
   if len(out) == 0:
-    print("returning nothing")
+    print("info: shell_interactive_read returns nothing")
     return "got no output"
   else:
-    print("returning something")
+    print("info: shell_interactive_read returned %d bytes" % len(out))
     return "got output:\n %s" % out
 
 def shell_interactive_write(data: Annotated[str, "The data to write"]):
@@ -94,7 +97,21 @@ def shell_interactive_write(data: Annotated[str, "The data to write"]):
   if PROCESS_LOCK is None:
     print("warn: shell_interactive_write called without PROCESS_LOCK")
     return "error: you have not started an interactive process"
+  print("info: shell_interactive_write('%s') called" % data.rstrip())
   PROCESS_LOCK.stdin.write(data.rstrip() + "\n")
   PROCESS_LOCK.stdin.flush()
   return "ok"
 
+def shell_interactive_kill():
+  global PROCESS_LOCK, PROCESS_RD_QUEUE, PROCESS_RD_THREAD, PROCESS_RD_STOP
+  print("info: shell_interactive_kill() invoked")
+  PROCESS_LOCK.terminate()
+  PROCESS_LOCK = None
+  print("info: pseudo-lock cleared")
+  PROCESS_RD_QUEUE = None
+  PROCESS_RD_STOP = True
+  # PROCESS_RD_THREAD.stop()
+  PROCESS_RD_THREAD.join()
+  PROCESS_RD_STOP = False
+  print("info: reader thread terminated and joined")
+  return "ok, process killed"
