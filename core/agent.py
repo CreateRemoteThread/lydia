@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 
 import inspect
-from agents import function_tool
 from typing import Annotated, get_args, get_origin
 import requests
 import json
 import os
+import time
+import random
 from typing import Dict
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEBUG_REQUESTS=os.getenv("DEBUG_REQUESTS",default=False)
 if DEBUG_REQUESTS is not False:
   print("info: DEBUG_REQUESTS set, dumping requests and response json")
   DEBUG_REQUESTS = True
+
+MAX_RETRY = 10
 
 def fn_to_tool_json(fn):
     """
@@ -72,7 +78,7 @@ def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=10.0, tools=[], reasoning=None):
+  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
     self.api_key = api_key
     self.base_url = base_url
     self.model = model
@@ -94,30 +100,59 @@ class Agent:
  
   @property
   def headers(self) -> Dict[str, str]:
-    return {
+    hdr =  {
       "Authorization": f"Bearer {self.api_key}",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "User-Agent": "lydia/0.0.2"
     }
+    x_portkey_provider = os.getenv("X_PORTKEY_PROVIDER",default=None)
+    if x_portkey_provider is not None:
+      hdr["x-portkey-provider"] = x_portkey_provider
+    return hdr
 
   def req_single(self,user_input=None):
+    global MAX_RETRY
+    local_retry = 0
     if user_input is not None:
+      print("appending user input")
       self.req["input"].append({"content":user_input,"role":"user"})
-    response = requests.post(
-      f"{self.base_url}/responses",
-      headers = self.headers,
-      json = self.req,
-      timeout = self.timeout
-    )
-    return response
+    while local_retry < MAX_RETRY:
+      try:
+        if DEBUG_REQUESTS:
+          print(">>>" * 10)
+          print(json.dumps(self.req,indent=2))
+          print(">>>" * 10)
+        response = requests.post(
+          f"{self.base_url}/responses",
+          headers = self.headers,
+          json = self.req,
+          timeout = self.timeout,
+          verify=False
+        )
+        return response
+      except requests.exceptions.ReadTimeout:
+        print("warn: timeout (%d/%d)" % (local_retry,MAX_RETRY))
+        local_retry += 1
+        sleeptime = random.randint(1,5)
+        time.sleep(sleeptime)
+        continue
+      except Exception as e:
+        print("fatal: what the absolute fuck")
+        print(e)
+        sys.exit(-1)
 
   def req_loop(self,user_input):
     global DEBUG_REQUESTS
+    RETN_DATA = None
+    RETN_TOOL = False
     last_user_input = user_input
     while True:
-      if DEBUG_REQUESTS:
-        print(">>>" * 10)
-        print(json.dumps(self.req,indent=2))
-        print(">>>" * 10)
+      if RETN_DATA is not None and RETN_TOOL is False:
+        return RETN_DATA
+      elif RETN_DATA is not None and RETN_TOOL is True:
+        print(RETN_DATA)
+      RETN_DATA = None
+      RETN_TOOL = False
       resp = self.req_single(last_user_input) 
       last_user_input = None
       if DEBUG_REQUESTS:
@@ -127,6 +162,7 @@ class Agent:
       outputs = resp.json()["output"]
       for resp_obj in outputs:
         if resp_obj["type"] == "function_call":
+          RETN_TOOL = True
           fn_obj = None
           for i in self.tools:
             if i.__name__ == resp_obj["name"]:
@@ -150,7 +186,9 @@ class Agent:
             "type":"function_call_output",
           })
         elif resp_obj["type"] == "message":
-          return resp_obj["content"][0]["text"]
+          # do not return if we also have a tool call
+          RETN_DATA = resp_obj["content"][0]["text"]
+          # return resp_obj["content"][0]["text"]
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:

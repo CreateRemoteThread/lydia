@@ -5,21 +5,24 @@ from typing import Annotated
 import sys
 import os
 from os.path import expanduser, normpath
-from agents import Agent, Runner, function_tool
 
 FN_PREFIX = os.getenv("FN_SANDBOX",default=None)
 if FN_PREFIX is not None:
   FN_PREFIX = expanduser(normpath(FN_PREFIX))
 
+MAX_DATA = 128000
 
 def file_read(filename: Annotated[str, "Name of the file to read"], start: Annotated[int, "Location to start reading from"], bytes: Annotated[int, "Number of bytes to read. Use -1 to read the whole file."]):
-  global FN_PREFIX
+  global FN_PREFIX, MAX_DATA
   print("info: file_read(%s,%d,%d) called" % (filename,start,bytes))
   if FN_PREFIX is None:
     print("fatal: you must specify FN_SANDBOX env")
     sys.exit(-1)
   realpath = expanduser(normpath(filename))
   if realpath.startswith(FN_PREFIX):
+    if os.path.isfile(realpath) is False:
+      print("warn: os.path.isfile('%s') is False" % realpath)
+      return "cannot open file (this is not a file, maybe a directory?)"
     with open(realpath) as f:
       f.seek(start)
       if bytes == -1:
