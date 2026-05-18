@@ -15,6 +15,8 @@ PROCESS_LOCK = None
 PROCESS_RD_QUEUE = None
 PROCESS_RD_THREAD = None
 
+# courtesy of gpt-4o
+# neat trick!
 def async_reader(pipe, q):
   global PROCESS_RD_QUEUE
   for line in iter(pipe.readline, ''):
