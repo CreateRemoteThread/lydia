@@ -114,7 +114,6 @@ class Agent:
     global MAX_RETRY
     local_retry = 0
     if user_input is not None:
-      print("appending user input")
       self.req["input"].append({"content":user_input,"role":"user"})
     while local_retry < MAX_RETRY:
       try:

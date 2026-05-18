@@ -2,7 +2,6 @@
 
 import sys
 import os
-import asyncio
 from typing import Annotated
 import core.agent
 import tools
@@ -34,7 +33,7 @@ def loadPrompt(prompt):
   else:
     return prompt
 
-async def main():
+def main():
   global Toolbox
   CFG_USR_PROMPT = None
   CFG_PERSONALITY = "You are a helpful assistant."
@@ -79,4 +78,4 @@ async def main():
   print(result)
 
 if __name__ == "__main__":
-  asyncio.run(main())
+  main()
