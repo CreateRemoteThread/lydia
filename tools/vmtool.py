@@ -9,12 +9,20 @@ from os.path import expanduser, normpath
 import subprocess
 import queue, threading
 
+RISK_ACCEPT = os.getenv("I_ACCEPT_THE_RISK",default=None)
 VM_SSHARGS = os.getenv("VM_SSHARGS",default=None)
 # pseudomutex: just hold the process here.
 PROCESS_LOCK = None
 PROCESS_RD_QUEUE = None
 PROCESS_RD_THREAD = None
 PROCESS_RD_STOP = False
+
+if RISK_ACCEPT is not None:
+  if RISK_ACCEPT == "ISO27001":
+    print("warn: I_ACCEPT_THE_RISK set to ISO27001, running commands locally")
+    RISK_ACCEPT = True
+  else:
+    RISK_ACCEPT = False
 
 # courtesy of gpt-4o
 # neat trick!
@@ -26,42 +34,55 @@ def async_reader(pipe, q):
     PROCESS_RD_QUEUE.put(line)
 
 def shell_exec(command: Annotated[str, "The command to run"]):
-  global VM_SSHARGS
-  if VM_SSHARGS is None:
-    print("fatal: you must specify VM_SSHARGS to use shell_exec")
+  global VM_SSHARGS, RISK_ACCEPT
+  if VM_SSHARGS is None and RISK_ACCEPT is False:
+    print("fatal: you must specify VM_SSHARGS to use shell_exec, or I_ACCEPT_THE_RISK to run locally")
     sys.exit(-1)
-  if VM_SSHARGS.startswith("ssh ") is False:
-    print("fatal: don't run local commands from ai you fucking retard")
-    sys.exit(-1)
-  command = command.replace("'", "\\'")
-  command = command.replace("*", "\\*")
-  new_c = VM_SSHARGS + " '" + command + "'"
-  print("info: shell_exec('%s') called" % new_c)
-  result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-  return result.stdout
+  if RISK_ACCEPT is True:
+    print("warn: I_ACCEPT_THE_RISK detected, running shell_exec('%s') locally" % command)
+    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout
+  else:
+    if VM_SSHARGS.startswith("ssh ") is False:
+      print("fatal: don't run local commands from ai you fucking retard")
+      sys.exit(-1)
+    command = command.replace("'", "\\'")
+    command = command.replace("*", "\\*")
+    new_c = VM_SSHARGS + " '" + command + "'"
+    print("info: shell_exec('%s') called" % new_c)
+    result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    return result.stdout
 
 def shell_interactive_start(command: Annotated[str, "The command to run"]):
-  global VM_SSHARGS, PROCESS_LOCK, PROCESS_RD_QUEUE, PROCESS_RD_THREAD
-  if VM_SSHARGS is None:
+  global VM_SSHARGS, PROCESS_LOCK, PROCESS_RD_QUEUE, PROCESS_RD_THREAD, RISK_ACCEPT
+  if VM_SSHARGS is None and RISK_ACCEPT is False:
     print("fatal: you must specify VM_SSHARGS to use shell_exec")
-    sys.exit(-1)
-  if VM_SSHARGS.startswith("ssh ") is False:
-    print("fatal: don't run local commands from ai you fucking retard")
     sys.exit(-1)
   if PROCESS_LOCK is not None:
     print("warn: shell_interactive_start called with PROCESS_LOCK on")
     return "error: you can only have one interactive process at a time"
-  # command = command.replace("'", "\\'")
-  # command = command.replace("*", "\\*")
-  # new_c = VM_SSHARGS + " '" + command + "'"
-  print("info: shell_interactive_start('%s') called, locking pretend mutex" % command)
-  PROCESS_LOCK = subprocess.Popen(
-    VM_SSHARGS.split() + [command],
-    stdin=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    text=True
-  )
+  if RISK_ACCEPT is True:
+    print("warn: shell_interactive_start('%s') called, locking pretend mutex, running locally" % command)
+    PROCESS_LOCK = subprocess.Popen(
+      command.split(),
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.STDOUT,
+      text=True
+    )
+  else:
+    if VM_SSHARGS.startswith("ssh ") is False:
+      print("fatal: don't run local commands from ai you fucking retard")
+      sys.exit(-1)
+    print("info: shell_interactive_start('%s') called, locking pretend mutex" % command)
+    PROCESS_LOCK = subprocess.Popen(
+      VM_SSHARGS.split() + [command],
+      stdin=subprocess.PIPE,
+      stdout=subprocess.PIPE,
+      stderr=subprocess.STDOUT,
+      text=True
+    )
+    
   print("info: starting async read queue")
   PROCESS_RD_QUEUE = queue.Queue()
   PROCESS_RD_THREAD = threading.Thread(

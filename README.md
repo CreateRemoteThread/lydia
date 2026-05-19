@@ -21,6 +21,11 @@ You can set the following environment variables:
 - X_PORTKEY_PROVIDER (if you're using portkey)
 - FN_SANDBOX (set to absolute path, file operations are constrained here)
 - VM_SSHARGS (set to ssh lol@lolhost, this prefixes any shell_exec commands)
+- I_ACCEPT_THE_RISK (set to "ISO27001" to run commands locally, overrides VM_SSHARGS)
 ```
+
+To add a new tool:
+- Write the code in the tools/ directory
+- Register it in tools/__init__.py (in ToolLoader.__init__)
 
 You probably shouldn't be here, you probably want /r/vibecoding instead.

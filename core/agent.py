@@ -7,6 +7,7 @@ import json
 import os
 import time
 import random
+import string
 from typing import Dict
 
 import urllib3
@@ -18,6 +19,7 @@ if DEBUG_REQUESTS is not False:
   DEBUG_REQUESTS = True
 
 MAX_RETRY = 10
+ASST_MSG_QUEUE = []
 
 def fn_to_tool_json(fn):
     """
@@ -141,9 +143,17 @@ class Agent:
         sys.exit(-1)
 
   def req_loop(self,user_input):
-    global DEBUG_REQUESTS
+    global DEBUG_REQUESTS, ASST_MSG_QUEUE
     RETN_DATA = None
     RETN_TOOL = False
+    if user_input is None:
+      print("fatal: req_loop called with no user input, how did we get here?")
+      sys.exit(-1)
+    if len(ASST_MSG_QUEUE) != 0:
+      for a in ASST_MSG_QUEUE:
+        print("info: flushing assistant message from queue to input obj...")
+        self.req["input"].append(a)
+      ASST_MSG_QUEUE = []
     last_user_input = user_input
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
@@ -172,22 +182,25 @@ class Agent:
             return "fatal: could not execute call '%s'" % resp_obj["name"]
           fn_args = json.loads(resp_obj["arguments"])
           respval = fn_obj(**fn_args)
+          if "id" in resp_obj.keys():
+            CALL_ID = resp_obj["id"]
+          else:
+            CALL_ID = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
           self.req["input"].append({
             "arguments":resp_obj["arguments"],
-            "call_id":resp_obj["id"],
+            "call_id":CALL_ID,
             "name":resp_obj["name"],
             "type":"function_call",
             "status":"completed"
           })
           self.req["input"].append({
-            "call_id":resp_obj["id"],
+            "call_id":CALL_ID,
             "output":respval,
             "type":"function_call_output",
           })
         elif resp_obj["type"] == "message":
-          # do not return if we also have a tool call
           RETN_DATA = resp_obj["content"][0]["text"]
-          # return resp_obj["content"][0]["text"]
+          ASST_MSG_QUEUE.append({"content":RETN_DATA,"role":"assistant"})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:

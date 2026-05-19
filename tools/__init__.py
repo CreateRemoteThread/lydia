@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import tools.filetool
-import tools.r2tool
 import tools.vmtool
 
 class ToolLoader:
@@ -18,8 +17,6 @@ class ToolLoader:
     self.registerFunction("file_read",filetool.file_read, "Use file_read tool to read files.")
     self.registerFunction("file_write",filetool.file_write, "Use file_write tool to write files.")
     self.registerFunction("file_glob",filetool.file_glob, "Use file_glob tool to search for files.")
-    self.registerFunction("r2_init",r2tool.r2_init, "Use r2_init to initialize radare2 on a file.")
-    self.registerFunction("r2_cmd",r2tool.r2_cmd, "Use r2_cmd to run a radare2 command.")
     self.registerFunction("shell_exec",vmtool.shell_exec, "Use shell_exec to run a non-interactive shell process.")
     self.registerFunction("shell_interactive_start",vmtool.shell_interactive_start, "Use shell_interactive_start to start an interactive shell process.")
     self.registerFunction("shell_interactive_read",vmtool.shell_interactive_read, "Use shell_interactive_read to read from the interactive process.")

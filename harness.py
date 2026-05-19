@@ -72,8 +72,12 @@ def main():
   # print(CFG_MODEL)
   agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
   if CFG_USR_PROMPT is None:
-    print("fatal: you must at least a user prompt with -p")
-    sys.exit(-1)
+    if CFG_INTERACTIVE is False:
+      print("fatal: you must at least a user prompt with -p or use -i for interactive")
+      sys.exit(-1)
+    else:
+      print("info: -i set, asking user for initial prompt")
+      CFG_USR_PROMPT = input(" > ").rstrip()
   if len(CFG_TOOLS) >= 1:
     print("info: using tools, attaching prompt helper string")
     CFG_USR_PROMPT += "\n" + Toolbox.prompthelper(CFG_TOOLS)
@@ -88,7 +92,7 @@ def main():
       new_prompt = input(" > ").rstrip() 
       if new_prompt in ["/exit","/quit",":wq",":q","quit()"]:
         break
-      agent.req_loop(new_prompt)
+      result = agent.req_loop(new_prompt)
     print("Bye!")
 
 if __name__ == "__main__":
