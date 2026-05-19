@@ -80,8 +80,10 @@ def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
+  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
     self.api_key = api_key
+    if self.api_key is None:
+      self.api_key = input("OPENAI_API_KEY > ").strip()
     self.base_url = base_url
     self.model = model
     self.timeout = timeout
