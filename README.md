@@ -35,7 +35,10 @@ You can set the following environment variables:
 ```
 
 To add a new tool:
+
+```
 - Write the code in the tools/ directory
 - Register it in tools/__init__.py (in ToolLoader.__init__)
+```
 
 You probably shouldn't be here, you probably want /r/vibecoding instead.
