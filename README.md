@@ -1,5 +1,7 @@
 # lydia
 
+Docs: [safety](docs/SAFETY.md)
+
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
 Use the following command line args:
