@@ -208,6 +208,7 @@ class Agent:
           sys.exit(-1)
 
 if __name__ == "__main__":
-  a = Agent(tools=[ask_user])
-  data = a.req_loop("Write a poem about fruit. Ask the user what type of fruit.") 
-  print(data)  
+  print("You probably want /r/vibecoding instead")
+  # a = Agent(tools=[ask_user])
+  # data = a.req_loop("Write a poem about fruit. Ask the user what type of fruit.") 
+  # print(data)  

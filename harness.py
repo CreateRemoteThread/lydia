@@ -4,8 +4,10 @@ import sys
 import os
 from typing import Annotated
 import core.agent
+import core.memory
 import tools
 import getopt
+import readline
 
 def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
@@ -40,7 +42,7 @@ def main():
   CFG_PERSONALITY = "You are a helpful assistant."
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
-  CFG_MODEL = "gpt-4o"
+  CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4o")
   CFG_REASONING = None
   args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox="])
   for arg,val in args:
@@ -78,6 +80,9 @@ def main():
     else:
       print("info: -i set, asking user for initial prompt")
       CFG_USR_PROMPT = input(" > ").rstrip()
+      if CFG_USR_PROMPT.startswith("!"):
+        print("fatal: you cannot use core.memory.memory_dispatch with 0 memory")
+        sys.exit(-1)
   if len(CFG_TOOLS) >= 1:
     print("info: using tools, attaching prompt helper string")
     CFG_USR_PROMPT += "\n" + Toolbox.prompthelper(CFG_TOOLS)
@@ -88,11 +93,17 @@ def main():
   else:
     result = agent.req_loop(CFG_USR_PROMPT)
     while True:
-      print(result)
+      if result is not None: # don't print the result on !reset
+        print(result)
       new_prompt = input(" > ").rstrip() 
       if new_prompt in ["/exit","/quit",":wq",":q","quit()"]:
         break
-      result = agent.req_loop(new_prompt)
+      if new_prompt.startswith("!"):    # special utility function.
+        core.memory.memory_dispatch(new_prompt[1:], agent) 
+        result = None
+        continue
+      else:
+        result = agent.req_loop(new_prompt)
     print("Bye!")
 
 if __name__ == "__main__":

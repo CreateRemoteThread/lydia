@@ -13,10 +13,18 @@ Use the following command line args:
 - --persona <persona/name.md>: replace system prompt with persona
 ```
 
+In interactive mode, the following commands are available:
+```
+- !reset: reset the message context
+- !stats: give rough stats on context size
+```
+
 You can set the following environment variables:
 ```
+- CMD_FW (comma-separated allowed commands for shell_ tools)
 - OPENAI_BASE_URL
 - OPENAI_API_KEY
+- OPENAI_DEFAULT_MODEL
 - DEBUG_REQUESTS (set to any value to enable dumping requests)
 - X_PORTKEY_PROVIDER (if you're using portkey)
 - FN_SANDBOX (set to absolute path, file operations are constrained here)
