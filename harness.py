@@ -70,6 +70,12 @@ def main():
           CFG_PERSONALITY = f.read()
       else:
         print("warn: cannot open persona '%s'" % val)
+  got_riskaccept =  os.getenv("I_ACCEPT_THE_RISK",default=None)
+  got_cmdfw = os.getenv("CMD_FW",default=None)
+  got_vmsshargs = os.getenv("VM_SSHARGS",default=None)
+  if (got_riskaccept is not None or got_cmdfw is not None or got_vmsshargs is not None) and len(CFG_TOOLS) == 0:
+    print("fatal: tool safety constraints enabled, but 0 tools selected")
+    sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
   # print(CFG_MODEL)
   agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)

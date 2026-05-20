@@ -1,6 +1,6 @@
 # lydia
 
-Docs: [safety](docs/SAFETY.md)
+Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
@@ -15,14 +15,9 @@ Use the following command line args:
 - --persona <persona/name.md>: replace system prompt with persona
 ```
 
-In interactive mode, the following commands are available:
-```
-- !reset: reset the message context
-- !stats: give rough stats on context size
-```
-
 You can set the following environment variables:
 ```
+- MEMORY_DECAY (how many turns tool calls stay in memory)
 - CMD_FW (comma-separated allowed commands for shell_ tools)
 - OPENAI_BASE_URL
 - OPENAI_API_KEY

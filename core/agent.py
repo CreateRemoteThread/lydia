@@ -5,9 +5,11 @@ from typing import Annotated, get_args, get_origin
 import requests
 import json
 import os
+import sys
 import time
 import random
 import string
+import core.memory
 from typing import Dict
 
 import urllib3
@@ -19,7 +21,6 @@ if DEBUG_REQUESTS is not False:
   DEBUG_REQUESTS = True
 
 MAX_RETRY = 10
-ASST_MSG_QUEUE = []
 
 def fn_to_tool_json(fn):
     """
@@ -81,6 +82,7 @@ def ask_user(question: Annotated[str, "The question to ask"]):
 
 class Agent:
   def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
+    self.asst_msg_queue = []
     self.api_key = api_key
     if self.api_key is None:
       self.api_key = input("OPENAI_API_KEY > ").strip()
@@ -145,17 +147,17 @@ class Agent:
         sys.exit(-1)
 
   def req_loop(self,user_input):
-    global DEBUG_REQUESTS, ASST_MSG_QUEUE
+    global DEBUG_REQUESTS
     RETN_DATA = None
     RETN_TOOL = False
     if user_input is None:
       print("fatal: req_loop called with no user input, how did we get here?")
       sys.exit(-1)
-    if len(ASST_MSG_QUEUE) != 0:
-      for a in ASST_MSG_QUEUE:
+    if len(self.asst_msg_queue) != 0:
+      for a in self.asst_msg_queue:
         print("info: flushing assistant message from queue to input obj...")
         self.req["input"].append(a)
-      ASST_MSG_QUEUE = []
+      self.asst_msg_queue = []
     last_user_input = user_input
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
@@ -164,7 +166,8 @@ class Agent:
         print(RETN_DATA)
       RETN_DATA = None
       RETN_TOOL = False
-      resp = self.req_single(last_user_input) 
+      resp = self.req_single(last_user_input)
+      core.memory.memory_fade(self.req["input"])
       last_user_input = None
       if DEBUG_REQUESTS:
         print("<<<" * 10)
@@ -202,7 +205,7 @@ class Agent:
           })
         elif resp_obj["type"] == "message":
           RETN_DATA = resp_obj["content"][0]["text"]
-          ASST_MSG_QUEUE.append({"content":RETN_DATA,"role":"assistant"})
+          self.asst_msg_queue.append({"content":RETN_DATA,"role":"assistant"})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:

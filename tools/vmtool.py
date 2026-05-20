@@ -159,8 +159,12 @@ def shell_interactive_write(data: Annotated[str, "The data to write"]):
     print("warn: shell_interactive_write called without PROCESS_LOCK")
     return "error: you have not started an interactive process"
   print("info: shell_interactive_write('%s') called" % data.rstrip())
-  PROCESS_LOCK.stdin.write(data.rstrip() + "\n")
-  PROCESS_LOCK.stdin.flush()
+  try:
+    PROCESS_LOCK.stdin.write(data.rstrip() + "\n")
+    PROCESS_LOCK.stdin.flush()
+  except BrokenPipeError as e:
+    print("warn: process died, returning")
+    return "failed, process died, unable to read"
   return "ok"
 
 def shell_interactive_kill():
