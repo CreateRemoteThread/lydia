@@ -1,6 +1,6 @@
 # lydia
 
-Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md)
+Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
