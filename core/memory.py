@@ -66,7 +66,7 @@ def memory_dispatch(cmd,agent):
     do_stats(agent.req["input"])
   elif tokens[0] == "save" and len(tokens) == 2:
     do_save(agent.req["input"],tokens[1])
-  elif cmd == "load" and len(tokens) == 2:
+  elif tokens[0] == "load" and len(tokens) == 2:
     do_load(tokens[1],agent)
   return
 

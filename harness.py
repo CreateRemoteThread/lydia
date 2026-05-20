@@ -101,7 +101,7 @@ def main():
       if result is not None: # don't print the result on !reset
         print(result)
       new_prompt = input(" > ").rstrip() 
-      if new_prompt in ["/exit","/quit",":wq",":q","quit()"]:
+      if new_prompt in ["/exit","/quit",":wq",":q","quit()","q"]:
         break
       if new_prompt.startswith("!"):    # special utility function.
         core.memory.memory_dispatch(new_prompt[1:], agent) 
