@@ -77,7 +77,6 @@ def main():
     print("fatal: tool safety constraints enabled, but 0 tools selected")
     sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
-  # print(CFG_MODEL)
   agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:

@@ -36,15 +36,21 @@ def memory_fade(input_array):
     print("mem: purged %d memories from context" % memories_purged)
 
 def do_save(input_arr,filename):
-  with open(filename,"w") as f:
-    f.write(json.dumps(input_arr))
-  print("mem: saved context to '%s'" % filename)
+  try:
+    with open(filename,"w") as f:
+      f.write(json.dumps(input_arr))
+    print("mem: saved context to '%s'" % filename)
+  except:
+    print("mem: error, could not save to '%s'" % filename)
 
 def do_load(filename,agent):
-  with open(filename,"r") as f:
-    data = json.loads(f.read())
-    agent.req["input"] = data
-  print("mem: loaded context from '%s' % filename)
+  try:
+    with open(filename,"r") as f:
+      data = json.loads(f.read())
+      agent.req["input"] = data
+    print("mem: loaded context from '%s'" % filename)
+  except:
+    print("mem: error, could not load from '%s'" % filename)
 
 def do_stats(input_arr):
   for i in input_arr:
@@ -58,6 +64,10 @@ def memory_dispatch(cmd,agent):
     print("memory: context reset")
   elif cmd == "stats":
     do_stats(agent.req["input"])
+  elif tokens[0] == "save" and len(tokens) == 2:
+    do_save(agent.req["input"],tokens[1])
+  elif cmd == "load" and len(tokens) == 2:
+    do_load(tokens[1],agent)
   return
 
 if __name__ == "__main__":

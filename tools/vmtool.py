@@ -90,11 +90,10 @@ def shell_exec(command: Annotated[str, "The command to run"]):
     result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return strip_terminal_colors(result.stdout)
 
+global PROCESS_HANDLE
+
 def shell_interactive_start(command: Annotated[str, "The command to run"]):
   global VM_SSHARGS, PROCESS_LOCK, PROCESS_RD_QUEUE, PROCESS_RD_THREAD, RISK_ACCEPT
-  if VM_SSHARGS is None and RISK_ACCEPT is False:
-    print("fatal: you must specify VM_SSHARGS to use shell_exec")
-    sys.exit(-1)
   if PROCESS_LOCK is not None:
     print("warn: shell_interactive_start called with PROCESS_LOCK on")
     return "error: you can only have one interactive process at a time"

@@ -11,7 +11,6 @@ The following commands can interact with memory while in interactive (-i) mode:
 ```
 - !reset: flush memory completely, waiting for next user input
 - !stats: check the size of memory
-- !dump <filename>: save context to file as JSON
+- !save <filename>: save context to file as JSON
 - !load <filename>: load JSON-dumped context from file
-- !tail <10>: keep the last 10 entries, scrub the rest
 ```

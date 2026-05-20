@@ -3,6 +3,7 @@
 import tools.filetool
 import tools.vmtool
 import tools.minibrowser
+import tools.term
 
 class ToolLoader:
   def registerFunction(self,name,function,func_desc):
@@ -25,6 +26,10 @@ class ToolLoader:
     self.registerFunction("shell_interactive_kill",vmtool.shell_interactive_kill, "Use shell_interactive_kill to terminate the interactive process")
     self.registerFunction("web_request",minibrowser.web_request, "Use web_request to make a web request.")
     self.registerFunction("web_download_file",minibrowser.web_download_file, "Use web_download_file to download a file.")
+    self.registerFunction("term_interactive_start",term.term_interactive_start, "Use term_interactive_start to start an interactive term process.")
+    self.registerFunction("term_interactive_read",term.term_interactive_read, "Use term_interactive_read to read from the interactive process.")
+    self.registerFunction("term_interactive_write",term.term_interactive_write, "Use term_interactive_write to write to the interactive process.")
+    self.registerFunction("term_interactive_kill",term.term_interactive_kill, "Use term_interactive_kill to terminate the interactive process")
 
   def fetch_toolbox(self,name):
     out = []
