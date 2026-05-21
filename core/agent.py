@@ -109,7 +109,7 @@ class Agent:
     hdr =  {
       "Authorization": f"Bearer {self.api_key}",
       "Content-Type": "application/json",
-      "User-Agent": "lydia/0.0.2"
+      "User-Agent": "lydia/0.0.3"
     }
     x_portkey_provider = os.getenv("X_PORTKEY_PROVIDER",default=None)
     if x_portkey_provider is not None:
