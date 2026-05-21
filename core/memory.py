@@ -53,8 +53,31 @@ def do_load(filename,agent):
     print("mem: error, could not load from '%s'" % filename)
 
 def do_stats(input_arr):
-  for i in input_arr:
-    print(i)
+  user_data = 0
+  user_reqs = 0
+  asst_data = 0
+  asst_reqs = 0
+  func_data = 0
+  fc_ids = []
+  for evt in input_arr:
+    if "role" in evt.keys():   # messagees
+      if evt["role"] == "user":
+        user_reqs += 1
+        user_data += len(evt["content"])
+      elif evt["role"] == "assistant": 
+        asst_reqs += 1
+        asst_data += len(evt["content"])
+    elif "type" in evt.keys(): # function calls / returns
+      if evt["type"] in ["function_call","function_call_output"]:
+        if evt["call_id"] not in fc_ids:
+          fc_ids.append(evt["call_id"])
+        if "output" in evt.keys():
+          func_data += len(evt["output"])
+      else:
+        print("mem: do_stats encountered unhandled type '%s', ignoring" % evt["type"])
+  print("mem: user data: %d bytes, %d requests" % (user_data,user_reqs))
+  print("mem: asst data: %d bytes, %d replies" % (asst_data,asst_reqs))
+  print("mem: %d unique function calls, %d bytes" % (len(fc_ids), func_data))
 
 def memory_dispatch(cmd,agent):
   print("memory: handling command of '%s'" % cmd)

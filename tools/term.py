@@ -91,7 +91,7 @@ class ProcessPty:
 
   def interact(self,data):
     os.write(self.master_fd,data.encode())
-    return self._read(0.2)
+    return self.screen_scrape()
 
   def screen_scrape(self):
     self._read(0.2)
@@ -113,7 +113,8 @@ def term_start(command: Annotated[str, "The command to run"]):
   if RISK_ACCEPT is True:
     print("warn: term_start('%s') called, locking pretend mutex, running locally" % command)
     PROCESS_LOCK = ProcessPty(command)
-    return "ok"
+    time.sleep(0.5)
+    return "ok. screen scraped:\n" + PROCESS_LOCK.screen_scrape()
   else:
     print("fatal: term_start without I_ACCEPT_THE_RISK, not handled")
     sys.exit(-1) 
@@ -129,8 +130,8 @@ def term_screen_scrape():
 def term_interact(data: Annotated[str, "The data to send"]):
   global PROCESS_LOCK
   print("info: term_interact('%s') called" % data)
-  PROCESS_LOCK.interact(data)
-  return "ok"
+  data = PROCESS_LOCK.interact(data)
+  return "ok. screen scraped:\n" + data
 
 def term_kill():
   global PROCESS_LOCK
