@@ -10,7 +10,8 @@ Use the following command line args:
 - -p/--prompt: set the prompt
 - -m/--model: set the model
 - -t/--tool: load a single tool
-- -r/--reasoning <low/medium/high>: enable reasoning where available.
+- -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
+- -h/--hatchery: experimental. load multi-agent configuration from json.
 - --toolbox <name>: load a set of tools that start with name
 - --persona <persona/name.md>: replace system prompt with persona
 ```

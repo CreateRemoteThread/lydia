@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 import pty
 import select
@@ -118,6 +119,24 @@ def term_start(command: Annotated[str, "The command to run"]):
   else:
     print("fatal: term_start without I_ACCEPT_THE_RISK, not handled")
     sys.exit(-1) 
+
+def term_locatechr(chrcode: Annotated[int, "The ASCII code of the character to locate"]):
+  global PROCESS_LOCK
+  print("info: term_locatechr(%d) called" % chrcode)
+  # if len(char) != 1:
+  #   return "error: term_locatechr takes exactly a single byte"
+  disp = PROCESS_LOCK.screen.display
+  y_max = len(disp)
+  x_max = len(disp[0]) 
+  locations = []
+  for y in range(0,y_max):
+    for x in range(0,x_max):
+      if ord(disp[y][x]) == chrcode:
+        locations.append( (x,y) )
+  if len(locations) == 0:
+    return "not found"
+  else:
+    return "found at: " + ", ".join(["(x:%d,y:%d)" % (x,y) for (x,y) in locations])
 
 def term_screen_scrape():
   global PROCESS_LOCK

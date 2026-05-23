@@ -28,6 +28,7 @@ class ToolLoader:
     self.registerFunction("web_download_file",minibrowser.web_download_file, "Use web_download_file to download a file.")
     self.registerFunction("term_start",term.term_start, "Use term_start to start an interactive process.")
     self.registerFunction("term_screen_scrape",term.term_screen_scrape, "Use term_screen_scrape to read the process terminal.")
+    self.registerFunction("term_locatechr",term.term_locatechr, "Use term_locatechr to locate a character on the screen.")
     self.registerFunction("term_interact",term.term_interact, "Use term_interact to write to the interactive process.")
     self.registerFunction("term_kill",term.term_kill, "Use term_kill to terminate the interactive process")
 

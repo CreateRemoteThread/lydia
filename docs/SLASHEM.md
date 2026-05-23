@@ -11,8 +11,6 @@ While typical command-line utilities can be interacted with using line buffered 
 - term_kill
 ```
 
-This meets with mixed success - we can see and interact with the game (i.e. a no-harness harness), but we cannot meaningfully play the game as-is with an LLM.
-
 ### Further reading
 
 - [It's 2026. Can LLM's Play Nethack Yet?](https://kenforthewin.github.io/blog/posts/nethack-agent/)

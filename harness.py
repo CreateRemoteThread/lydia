@@ -5,6 +5,7 @@ import os
 from typing import Annotated
 import core.agent
 import core.memory
+import core.hatchery
 import tools
 import getopt
 import readline
@@ -42,14 +43,17 @@ def main():
   CFG_PERSONALITY = "You are a helpful assistant."
   CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
   CFG_TOOLS = []
-  CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4o")
+  CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
   CFG_REASONING = None
-  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox="])
+  CFG_HATCHERY = None
+  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       CFG_USR_PROMPT = loadPrompt(val)
     elif arg in ["-i","--interactive"]:
       CFG_INTERACTIVE = True
+    elif arg in ["-a","--agentic"]:
+      CFG_HATCHERY = val
     elif arg in ["-r","--reasoning"]:
       if val in ["low","medium","high"]:
         CFG_REASONING = val
@@ -70,6 +74,12 @@ def main():
           CFG_PERSONALITY = f.read()
       else:
         print("warn: cannot open persona '%s'" % val)
+  if CFG_HATCHERY is not None:
+    h = core.hatchery.Hatchery(CFG_HATCHERY)
+    h.run()
+    # print(h)
+    print("hatchery: passing to core.hatchery. bye!")
+    sys.exit(0)
   got_riskaccept =  os.getenv("I_ACCEPT_THE_RISK",default=None)
   got_cmdfw = os.getenv("CMD_FW",default=None)
   got_vmsshargs = os.getenv("VM_SSHARGS",default=None)

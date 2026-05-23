@@ -80,7 +80,7 @@ def do_stats(input_arr):
   print("mem: %d unique function calls, %d bytes" % (len(fc_ids), func_data))
 
 def memory_dispatch(cmd,agent):
-  print("memory: handling command of '%s'" % cmd)
+  print("mem: handling command of '%s'" % cmd)
   tokens = cmd.split()
   if cmd == "reset":
     agent.req["input"] = []

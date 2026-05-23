@@ -77,9 +77,6 @@ def fn_to_tool_json(fn):
         },
     }
 
-def ask_user(question: Annotated[str, "The question to ask"]):
-  return input(question + " > ").strip()
-
 class Agent:
   def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
     self.asst_msg_queue = []
@@ -99,10 +96,6 @@ class Agent:
     self.req["model"] = model
     self.req["stream"] = False  
     self.tools = tools   # this is our copy
-    if len(tools) > 0:   # this copy goes to the llm server
-      self.req["tools"] = []
-      for tl in tools:
-        self.req["tools"].append(fn_to_tool_json(tl))
  
   @property
   def headers(self) -> Dict[str, str]:
@@ -117,7 +110,17 @@ class Agent:
     return hdr
 
   def req_single(self,user_input=None):
-    global MAX_RETRY
+    global MAX_RETRY, DEBUG_REQUESTS
+    # this used to be in init - experimentally move to here
+    # to support changing tools halfway through a 
+    # request.
+    if len(self.tools) > 0: 
+      # print("adding %d tools" % len(self.tools))
+      self.req["tools"] = []
+      for tl in self.tools:
+        self.req["tools"].append(fn_to_tool_json(tl))
+    else:
+      del(self.req["tools"])
     local_retry = 0
     if user_input is not None:
       self.req["input"].append({"content":user_input,"role":"user"})
@@ -146,6 +149,11 @@ class Agent:
         print(e)
         sys.exit(-1)
 
+  def req_until_complete(self,user_input):
+    print("info: entering req_until_complete")
+    data = self.req_loop(user_input)
+    print(data)
+
   def req_loop(self,user_input):
     global DEBUG_REQUESTS
     RETN_DATA = None
@@ -158,7 +166,6 @@ class Agent:
         print("info: flushing assistant message from queue to input obj...")
         self.req["input"].append(a)
       self.asst_msg_queue = []
-    last_user_input = user_input
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
         return RETN_DATA
@@ -166,9 +173,8 @@ class Agent:
         print(RETN_DATA)
       RETN_DATA = None
       RETN_TOOL = False
-      resp = self.req_single(last_user_input)
+      resp = self.req_single(user_input)
       core.memory.memory_fade(self.req["input"])
-      last_user_input = None
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))

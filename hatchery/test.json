@@ -1,0 +1,17 @@
+{
+  "start":"SlashemLoader",
+  "nodes":[
+  {
+    "name":"SlashemLoader",
+    "sys_prompt":"You are a helpful assistant.",
+    "usr_prompt":"Run the process slashem interactively. Pass the next output to the next ",
+    "tools":["term"],
+    "next":"StoryJ"
+  },
+  {
+    "name":"StoryJudge",
+    "sys_prompt":"You are a helpful assistant.",
+    "usr_prompt":"Review the game state"
+  }
+  ]
+}
