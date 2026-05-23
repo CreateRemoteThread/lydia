@@ -22,7 +22,7 @@ if DEBUG_REQUESTS is not False:
 
 MAX_RETRY = 10
 
-def fn_to_tool_json(fn):
+def fn_to_tool_json(fn,tag=None):
     """
     Convert an annotated Python function into an OpenAI Responses API tool schema.
     """
@@ -40,41 +40,50 @@ def fn_to_tool_json(fn):
         dict: "object",
     }
 
+    SKIP_FIRST = False
+    # arglist = sig.parameters.items()
+    # if tag is not None:
+    #   arglist = arglist[1:]
     for name, param in sig.parameters.items():
-        annotation = param.annotation
+      if tag is not None and SKIP_FIRST is False:
+        SKIP_FIRST = True
+        continue
+      annotation = param.annotation
+      description = ""
+      py_type = str
+      # Handle Annotated[T, "description"]
+      if get_origin(annotation) is Annotated:
+        args = get_args(annotation)
+        py_type = args[0]
+        if len(args) > 1:
+          description = args[1]
+      else:
+        py_type = annotation
 
-        description = ""
-        py_type = str
+      json_type = type_map.get(py_type, "string")
 
-        # Handle Annotated[T, "description"]
-        if get_origin(annotation) is Annotated:
-            args = get_args(annotation)
-            py_type = args[0]
-            if len(args) > 1:
-                description = args[1]
-        else:
-            py_type = annotation
+      properties[name] = {
+        "type": json_type,
+        "description": description,
+      }
 
-        json_type = type_map.get(py_type, "string")
-
-        properties[name] = {
-            "type": json_type,
-            "description": description,
-        }
-
-        if param.default is inspect.Parameter.empty:
-            required.append(name)
+      if param.default is inspect.Parameter.empty:
+        required.append(name)
+  
+    fn_name = fn.__name__
+    if tag is not None:
+      fn_name += "-" + tag
 
     return {
-        "type": "function",
-        "name": fn.__name__,
-        "description": inspect.getdoc(fn) or "",
-        "parameters": {
-            "type": "object",
-            "properties": properties,
-            "required": required,
-            "additionalProperties": False,
-        },
+      "type": "function",
+      "name": fn_name,
+      "description": inspect.getdoc(fn) or "",
+      "parameters": {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": False,
+      },
     }
 
 class Agent:
@@ -94,8 +103,28 @@ class Agent:
     self.req["instructions"] = sys_prompt
     self.req["metadata"] = None
     self.req["model"] = model
-    self.req["stream"] = False  
-    self.tools = tools   # this is our copy
+    self.req["stream"] = False
+    self.tools = tools          # this is generic tools
+    # -design note-
+    # this has to stay in __init__ for tagged function calls
+    # from hatchery to work (least bad option). hatchery will
+    # manually add special calls to this, to handle hatchery-only
+    # 
+    # functionality (e.g. routing)
+    # the tradeoff is inflexibility in adjusting tools mid-prompt
+    # but this is good friction [tm] - otherwise the llm can add
+    # toolbox shell and toolbox term and it's all downhill from there
+    if len(self.tools) > 0: 
+      self.req["tools"] = []
+      for tl in self.tools:
+        self.req["tools"].append(fn_to_tool_json(tl))
+    else:
+      del(self.req["tools"])
+
+  def append_tagged_tool(self,func,tag,desc):
+    self.req["tools"].append(fn_to_tool_json(func,tag))
+    self.tools.append(func)
+    self.req["instructions"] += " " + desc
  
   @property
   def headers(self) -> Dict[str, str]:
@@ -111,16 +140,6 @@ class Agent:
 
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
-    # this used to be in init - experimentally move to here
-    # to support changing tools halfway through a 
-    # request.
-    if len(self.tools) > 0: 
-      # print("adding %d tools" % len(self.tools))
-      self.req["tools"] = []
-      for tl in self.tools:
-        self.req["tools"].append(fn_to_tool_json(tl))
-    else:
-      del(self.req["tools"])
     local_retry = 0
     if user_input is not None:
       self.req["input"].append({"content":user_input,"role":"user"})
@@ -184,15 +203,23 @@ class Agent:
         if resp_obj["type"] == "function_call":
           RETN_TOOL = True
           fn_obj = None
+          fn_tag = None
+          fn_name = resp_obj["name"]
+          if "-" in fn_name:
+            (fn_name, fn_tag) = fn_name.split("-")
           for i in self.tools:
-            if i.__name__ == resp_obj["name"]:
+            if i.__name__ == fn_name:
               fn_obj = i
               break
           if fn_obj is None:
-            print("fatal: could not execute call '%s'" %  resp_obj["name"])
-            return "fatal: could not execute call '%s'" % resp_obj["name"]
+            print("fatal: could not execute call '%s'" % fn_name)
+            return "fatal: could not execute call '%s'" % fn_name
           fn_args = json.loads(resp_obj["arguments"])
-          respval = fn_obj(**fn_args)
+          if fn_tag is not None:
+            print("info: special call, tagged function")
+            respval = fn_obj(fn_tag,**fn_args)
+          else:
+            respval = fn_obj(**fn_args)
           if "id" in resp_obj.keys():
             CALL_ID = resp_obj["id"]
           else:
@@ -222,4 +249,4 @@ if __name__ == "__main__":
   print("You probably want /r/vibecoding instead")
   # a = Agent(tools=[ask_user])
   # data = a.req_loop("Write a poem about fruit. Ask the user what type of fruit.") 
-  # print(data)  
+  # print(data) 

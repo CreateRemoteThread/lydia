@@ -3,15 +3,8 @@
   "nodes":[
   {
     "name":"SlashemLoader",
-    "sys_prompt":"You are a helpful assistant.",
-    "usr_prompt":"Run the process slashem interactively. Pass the next output to the next ",
-    "tools":["term"],
-    "next":"StoryJ"
-  },
-  {
-    "name":"StoryJudge",
-    "sys_prompt":"You are a helpful assistant.",
-    "usr_prompt":"Review the game state"
+    "usr_prompt":"Run the process slashem interactively, and scrape the screen. Call node_route-SlashemLoader with the number of fruit on the screen.",
+    "tools":["term"]
   }
   ]
 }

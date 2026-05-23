@@ -1,6 +1,6 @@
 # lydia
 
-Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md)
+Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
@@ -11,7 +11,7 @@ Use the following command line args:
 - -m/--model: set the model
 - -t/--tool: load a single tool
 - -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
-- -h/--hatchery: experimental. load multi-agent configuration from json.
+- -a/--agentic: experimental. load a json file for hatchery mode
 - --toolbox <name>: load a set of tools that start with name
 - --persona <persona/name.md>: replace system prompt with persona
 ```
