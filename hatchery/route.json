@@ -1,0 +1,16 @@
+{
+  "start":"FruitStoryBananas",
+  "nodes":[
+  {
+    "name":"FruitStoryBananas",
+    "usr_prompt":"Write a short story about bananas, 4 sentences maximum.",
+    "next":"StoryReviewer",
+    "save_output":"mystory"
+  },
+  {
+    "name":"StoryReviewer",
+    "usr_prompt":"Here is a story: {{ ctx.mystory }}.\nReview the story. Output 'banana' if the story is about bananas. Output 'guava' if the story is about guavas.",
+    "max_output_tokens":10
+  }
+  ]
+}

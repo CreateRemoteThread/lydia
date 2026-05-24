@@ -87,7 +87,7 @@ def fn_to_tool_json(fn,tag=None):
     }
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None):
+  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
     self.asst_msg_queue = []
     self.api_key = api_key
     if self.api_key is None:
@@ -104,6 +104,12 @@ class Agent:
     self.req["metadata"] = None
     self.req["model"] = model
     self.req["stream"] = False
+    # -design note-
+    # this is to support routing between nodes - there is no
+    # easy way to force a consistent choice, so just grep the
+    # output.
+    if max_output_tokens is not None:
+      self.req["max_output_tokens"] = max_output_tokens
     self.tools = tools          # this is generic tools
     # -design note-
     # this has to stay in __init__ for tagged function calls
@@ -118,7 +124,7 @@ class Agent:
       self.req["tools"] = []
       for tl in self.tools:
         self.req["tools"].append(fn_to_tool_json(tl))
-    else:
+    elif "tools" in self.req.keys():
       del(self.req["tools"])
 
   def append_tagged_tool(self,func,tag,desc):
