@@ -75,9 +75,8 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
       print("warn: read from '%s' blocked by sandbox" % filename)
       return "error: cannot read file, no permission"
 
-
 def file_write(filename: Annotated[str, "Name of the file to write to"], data: Annotated[str, "Data to write"], append: Annotated[bool, "True to append to end of file, False to write over existing data"]):
-  global FN_PREFIX
+  global FN_PREFIX, FILE_WRITE_PERMISSION
   print("info: file_write(%s,len(data)=%d) called" % (filename, len(data)))
   if FN_PREFIX is None:
     print("fatal: you must specify FN_SANDBOX env")

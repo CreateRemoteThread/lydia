@@ -30,8 +30,14 @@ class Drone(core.agent.Agent):
     self.save_output = None
     self.write_output = None
     self.preserve_ctx = False
+    # -design note-
+    # it's tempting to just allow toolbox fetching, but this puts us
+    # in an awkward position with file_write. in practice, there is no
+    # good way to force models to use file_write appropriately - so
+    # just don't allow fetch_toolbox("file")
     for t in _tools:
-      self.avail_tools = self.toolbox.fetch_toolbox(t)
+      self.avail_tools.append(t)
+      # self.avail_tools.append(self.toolbox.fetch(t))
     super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model)
     # super().append_tagged_tool(node_route,"Drone","Use node_route-Drone when needed")
 

@@ -8,7 +8,7 @@
     {
       "name":"ReviewSource",
       "usr_prompt":"You are playing a CTF. Review the files in {{ ctx.srcfolder }}, and identify any exploitable vulnerabilities related to {{ ctx.focus_areas }}.",
-      "tools":["file"],
+      "tools":["file_rg","file_read","file_glob"],
       "save_output":"initial_output",
       "write_output":"/var/tmp/initial_output.txt",
       "model":"gpt-5.4",
@@ -17,9 +17,9 @@
     {
       "name":"SkepticAgent",
       "usr_prompt":"Review the following security report, and check if the findings are accurate. Here is the report:\n\n{{ ctx.initial_output }}",
-      "tools":["file"],
+      "tools":["file_rg","file_read","file_glob"],
       "write_output":"/var/tmp/checker_output.txt",
       "model":"gpt-5.4"
-    },
+    }
   ]
 }
