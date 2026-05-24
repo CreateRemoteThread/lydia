@@ -9,7 +9,8 @@
   },
   {
     "name":"StoryReviewer",
-    "usr_prompt":"Here is a story: {{ ctx.mystory }}.\nReview the story. Output 'banana' if the story is about bananas. Output 'guava' if the story is about guavas.",
+    "usr_prompt":"Here is a story: {{ ctx.mystory }}.\nReview the story. Output 'BananaNode' if the story is about bananas. Output 'GuavaNode' if the story is about guavas.",
+    "next":["BananaNode","GuavaNode","ExitNode"],
     "max_output_tokens":10
   }
   ]

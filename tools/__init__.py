@@ -16,6 +16,7 @@ class ToolLoader:
   def __init__(self):
     self.tools = {}
     self.tooldesc = {}
+    self.registerFunction("file_rg",filetool.file_rg, "Use file_rg to find all files matching a pattern.")
     self.registerFunction("file_read",filetool.file_read, "Use file_read tool to read files.")
     self.registerFunction("file_write",filetool.file_write, "Use file_write tool to write files.")
     self.registerFunction("file_glob",filetool.file_glob, "Use file_glob tool to search for files.")
@@ -35,7 +36,7 @@ class ToolLoader:
   def fetch_toolbox(self,name):
     out = []
     for i in self.tools.keys():
-      if name in i:
+      if i.startswith(name):
         out.append(i)
     print("info: fetch_toolbox(%s) returned %d results" % (name,len(out)))
     return out

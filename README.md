@@ -4,6 +4,8 @@ Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASH
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
+The cost of this is intentional friction: you cannot bu
+
 Use the following command line args:
 ```
 - -i/--interactive: interactive mode (i.e. chat interface)

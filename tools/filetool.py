@@ -5,12 +5,34 @@ from typing import Annotated
 import sys
 import os
 from os.path import expanduser, normpath
+import subprocess
 
 FN_PREFIX = os.getenv("FN_SANDBOX",default=None)
 if FN_PREFIX is not None:
   FN_PREFIX = expanduser(normpath(FN_PREFIX))
 
 MAX_DATA = 128000
+
+def file_rg(pattern: Annotated[str, "pattern to pass to search for with ripgrep."]):
+  global FN_PREFIX
+  print("info: file_rg('%s') called" % pattern)
+  if FN_PREFIX is None:
+    print("fatal: you must specify FN_SANDBOX env")
+    sys.exit(-1)
+  result = subprocess.run(
+    ["rg","--color=never" ,pattern, FN_PREFIX],
+    capture_output=True,
+    text=True,
+    encoding="utf-8",
+    errors="replace",
+    check=False
+  )
+  if result.returncode == 0:
+    return "ok, results:\n" + result.stdout
+  elif result.returncode == 1:
+    return "ok: no matches found"
+  else:
+    return f"error: ripgrep failed: {result.stderr.strip()}"
 
 def file_read(filename: Annotated[str, "Name of the file to read"], start: Annotated[int, "Location to start reading from"], bytes: Annotated[int, "Number of bytes to read. Use -1 to read the whole file."]):
   global FN_PREFIX, MAX_DATA

@@ -127,6 +127,9 @@ class Agent:
     elif "tools" in self.req.keys():
       del(self.req["tools"])
 
+  def flush_history(self):
+    self.req["input"] = []  
+
   def append_tagged_tool(self,func,tag,desc):
     self.req["tools"].append(fn_to_tool_json(func,tag))
     self.tools.append(func)

@@ -8,17 +8,16 @@ Therefore, it is critical to build a way for agent instances to pass content to 
 
 ### Architecture
 
-A Hatchery object represents a network of Drone(core.agent.Agent) objects, as described in a configuration JSON file (see hatchery/*). The drones should be able to pass messages in these ways:
+A Hatchery object represents a network of Drone(core.agent.Agent) objects, as described in a configuration JSON file (see hatchery/*). A drone can specify one or more "next" nodes:
 
-- Drone1->Drone2 (including loops)
-- Drone1->(Work by Drone2)->Drone1->Next Drone
-- Drone1->CollectorFunction(Drone1.1,Drone1.2,Drone1.3)
+- If a drone has zero next nodes (i.e. next is not present): hatchery will print the output of that drone and exit.
+- If a drone has exactly one next node: hatchery will run the next drone.
+- If a drone has more than one next node: hatchery will check the output of the current drone. If any of the next node names are present, it will route to that drone. If not, it will route to the last node as a default case. (todo: consider changing).
 
 Output can be passed between nodes, using a shared context object which exists for the lifetime of the hatchery ("ctx"). Write to the output of ctx with "save_output", read from it with Jinja2 templating (ctx.varnamehere).
-
-- Exit node.
 
 ### Reading material
 
 - [colony_agent](https://github.com/qriousec/colony_agent)
 - [google multi agent patterns](https://developers.googleblog.com/developers-guide-to-multi-agent-patterns-in-adk/)
+- [patch diffing and llms](https://www.clearseclabs.com/blog/patch-diffing-llms-ghidriff-obts-2025/)

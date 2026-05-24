@@ -75,10 +75,9 @@ def main():
       else:
         print("warn: cannot open persona '%s'" % val)
   if CFG_HATCHERY is not None:
+    print("hatchery: passing to core.hatchery. bye!")
     h = core.hatchery.Hatchery(CFG_HATCHERY)
     h.run()
-    # print(h)
-    print("hatchery: passing to core.hatchery. bye!")
     sys.exit(0)
   got_riskaccept =  os.getenv("I_ACCEPT_THE_RISK",default=None)
   got_cmdfw = os.getenv("CMD_FW",default=None)

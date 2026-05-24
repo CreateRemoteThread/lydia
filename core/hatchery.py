@@ -28,12 +28,14 @@ class Drone(core.agent.Agent):
     self.next = next
     self.avail_tools = []
     self.save_output = None
+    self.preserve_ctx = False
     for t in _tools:
       self.avail_tools = self.toolbox.fetch_toolbox(t)
     super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools])
     # super().append_tagged_tool(node_route,"Drone","Use node_route-Drone when needed")
 
   def run(self,ctx):
+    super().flush_history()
     template = jinja2.Template(self.usr_prompt)
     new_usr_prompt = template.render(ctx=ctx)
     return super().req_loop(new_usr_prompt)
