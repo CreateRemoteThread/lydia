@@ -1,3 +1,15 @@
 {
-  "start":"ContextGen"
+  "start":"ReviewSource",
+  "inputs":{
+    "srcfolder":"ctx.srcfolder: enter the source folder > ",
+    "focus_areas":"ctx.focusareas: enter focus areas > "
+  },
+  "nodes":[
+    {
+      "name":"ReviewSource",
+      "usr_prompt":"You are playing a CTF. Review the files in {{ ctx.srcfolder }}, and identify any exploitable vulnerabilities related to {{ ctx.focus_areas }}.",
+      "tools":["file"],
+      "save_output":"mystory"
+    }
+  ]
 }

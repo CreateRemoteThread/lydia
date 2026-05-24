@@ -46,6 +46,10 @@ class Hatchery:
     with open(fn) as f:
       self.nodegraph = json.loads(f.read())
     self.start = self.nodegraph["start"]
+    user_inputs = self.nodegraph.get("inputs",{})
+    self.ctx = {}
+    for i in user_inputs.keys():
+      self.ctx[i] = input(user_inputs[i]).strip()  
     for node in self.nodegraph["nodes"]:
       node_name =  node.get("name","%s" % uuid.uuid4())
       sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
@@ -58,11 +62,10 @@ class Hatchery:
   def run(self):
     print("hatchery: starting")
     drone = self.nodes[self.start]
-    ctx = {}
     while True:
-      output = drone.run(ctx)
+      output = drone.run(self.ctx)
       if drone.save_output is not None:
-        ctx[drone.save_output] = output
+        self.ctx[drone.save_output] = output
       if drone.next is None:
         print(output)
         break
