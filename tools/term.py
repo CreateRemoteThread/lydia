@@ -63,8 +63,9 @@ class ProcessPty:
     self.screen = pyte.Screen(80,24)
     self.stream = pyte.ByteStream(self.screen)
     self.master_fd, self.slave_fd = pty.openpty()
-    self._set_winsize(self.slave_fd,80,24)    
-    self.proc = subprocess.Popen([command], stdin=self.slave_fd, stdout=self.slave_fd, stderr=self.slave_fd, preexec_fn=os.setsid,close_fds=True)
+    self._set_winsize(self.slave_fd,80,24)
+    cmd_tokens = command.split()
+    self.proc = subprocess.Popen(cmd_tokens, stdin=self.slave_fd, stdout=self.slave_fd, stderr=self.slave_fd, preexec_fn=os.setsid,close_fds=True)
     print(self.proc)
     os.close(self.slave_fd)
 

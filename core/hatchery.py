@@ -20,7 +20,7 @@ def node_route(tag,fruit_count: Annotated[int, "The number of fruits"]):
   return "ok"
 
 class Drone(core.agent.Agent):
-  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None):
+  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):
     print("drone: initializing drone '%s'" % node_name)
     self.toolbox = tools.ToolLoader()
     self.name = node_name
@@ -38,7 +38,7 @@ class Drone(core.agent.Agent):
     for t in _tools:
       self.avail_tools.append(t)
       # self.avail_tools.append(self.toolbox.fetch(t))
-    super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model)
+    super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model,base_url=base_url)
     # super().append_tagged_tool(node_route,"Drone","Use node_route-Drone when needed")
 
   def run(self,ctx):
@@ -54,7 +54,7 @@ class Hatchery:
       self.nodegraph = json.loads(f.read())
     self.start = self.nodegraph["start"]
     user_inputs = self.nodegraph.get("inputs",{})
-    file_inputs = self.nodegraph.get("readfiles",{})
+    file_inputs = self.nodegraph.get("files",{})
     self.ctx = {}
     for i in user_inputs.keys():
       self.ctx[i] = input(user_inputs[i]).strip()  
@@ -64,11 +64,12 @@ class Hatchery:
       self.ctx[i] = input(user_inputs[i]).strip()  
     for node in self.nodegraph["nodes"]:
       node_model =  node.get("model",os.getenv("OPENAI_DEFAULT_MODEL","gpt-4o"))
+      node_base_url =  node.get("base_url",os.getenv("OPENAI_BASE_URL","https://api.openai.com/v1"))
       node_name =  node.get("name","%s" % uuid.uuid4())
       sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
       usr_prompt = node["usr_prompt"]
       tools  = node.get("tools",[])
-      self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model)
+      self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url)
       self.nodes[node_name].save_output = node.get("save_output",None)
       self.nodes[node_name].write_output = node.get("write_output",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
