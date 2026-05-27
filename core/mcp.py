@@ -4,6 +4,7 @@ import json
 import subprocess
 import itertools
 import sys
+import copy
 
 class MCPHandlerStdio:
   def send_notification(self,method,params=None):
@@ -77,6 +78,7 @@ class MCPLoader:
       t += mcp.tools_json 
     for tool in t:
       tool["type"] = "function"
+      tool["parameters"] = tool.pop("inputSchema")
     return t
 
   def mcp_call(self,fn_name,fn_args):
@@ -92,4 +94,4 @@ if __name__ == "__main__":
   print("start")
   m = MCPLoader()
   m.load_mcp("npx -y chrome-devtools-mcp@latest")
-  print(m.get_json())
+  print(json.dumps(m.get_json(),indent=2))
