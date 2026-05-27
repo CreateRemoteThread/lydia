@@ -35,9 +35,13 @@ class MCPHandlerStdio:
       return json.loads(line).get("result")
 
   def fn_call(self,name,params):
-    print("mcp: fn_call hit inside mcp handler")
+    # print("mcp: fn_call hit inside mcp handler")
     r = self.send_request("tools/call",{"name":name,"arguments":params})
-    print(r)
+    cont = r.get("content")
+    if len(cont) == 1 and cont[0]["type"] == "text":
+      return cont[0]["text"]
+    else:
+      return cont
 
   def __init__(self,command):
     self._id_counter = itertools.count(1)
@@ -64,6 +68,7 @@ class MCPHandlerStdio:
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
       self.tool_names.append(i.get("name"))
+      i["parameters"] = i.pop("inputSchema") # do this once, here, at loading.
 
 class MCPLoader:
   def __init__(self):
@@ -78,7 +83,6 @@ class MCPLoader:
       t += mcp.tools_json 
     for tool in t:
       tool["type"] = "function"
-      tool["parameters"] = tool.pop("inputSchema")
     return t
 
   def mcp_call(self,fn_name,fn_args):
@@ -86,9 +90,11 @@ class MCPLoader:
     for mcp in self.mcplist:
       if fn_name in mcp.tool_names:
         print("mcp: found server hosting '%s'" % fn_name)
-        mcp.fn_call(fn_name,fn_args)
+        return mcp.fn_call(fn_name,fn_args)
         break
-    sys.exit(0)
+    print("mcp: could not find '%s'" % fn_name)
+    return None
+    # sys.exit(0)
 
 if __name__ == "__main__":
   print("start")

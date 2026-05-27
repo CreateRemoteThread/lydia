@@ -217,7 +217,12 @@ class Agent:
               return "fatal: could not execute call '%s'" % fn_name
             else:
               print("info: attempting to pass to mcp loader")
-              self.mcploader.mcp_call(fn_name,fn_args)
+              mcp_ret = self.mcploader.mcp_call(fn_name,fn_args)
+              if mcp_ret is None:
+                print("fatal: could not execute (or find in mcp) function '%s'" % fn_name)
+                return "fatal: could not execute (or find in mcp) function '%s'" % fn_name
+              else:
+                return str(mcp_ret)
           else: # found the function first pass
             respval = fn_obj(**fn_args)
           if "id" in resp_obj.keys():
