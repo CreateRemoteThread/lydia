@@ -4,6 +4,7 @@ import tools.filetool
 import tools.vmtool
 import tools.minibrowser
 import tools.term
+import tools.chrome
 
 class ToolLoader:
   def registerFunction(self,name,function,func_desc):
@@ -31,7 +32,8 @@ class ToolLoader:
     self.registerFunction("term_screen_scrape",term.term_screen_scrape, "Use term_screen_scrape to read the process terminal.")
     self.registerFunction("term_locatechr",term.term_locatechr, "Use term_locatechr to locate a character on the screen.")
     self.registerFunction("term_interact",term.term_interact, "Use term_interact to write to the interactive process.")
-    self.registerFunction("term_kill",term.term_kill, "Use term_kill to terminate the interactive process")
+    self.registerFunction("term_kill",term.term_kill, "Use term_kill to terminate the interactive process.")
+    self.registerFunction("chrome_debug",chrome.devtools, "Use chrome.debug to send a request to a Chrome DevTools server at http://localhost:9222/ .")
 
   def fetch_toolbox(self,name):
     out = []
