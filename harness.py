@@ -6,6 +6,7 @@ from typing import Annotated
 import core.agent
 import core.memory
 import core.hatchery
+import core.mcp
 import tools
 import getopt
 import readline
@@ -14,6 +15,7 @@ def ask_user(question: Annotated[str, "The question to ask"]):
   return input(question + " > ").strip()
 
 Toolbox = tools.ToolLoader()
+MCPLoader = core.mcp.MCPLoader()
 
 def loadTool(toolName):
   global Toolbox
@@ -46,12 +48,14 @@ def main():
   CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
   CFG_REASONING = None
   CFG_HATCHERY = None
-  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic="])
+  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       CFG_USR_PROMPT = loadPrompt(val)
     elif arg in ["-i","--interactive"]:
       CFG_INTERACTIVE = True
+    elif arg == "--mcp":
+      MCPLoader.load_mcp(val)
     elif arg in ["-a","--agentic"]:
       CFG_HATCHERY = val
     elif arg in ["-r","--reasoning"]:
@@ -87,6 +91,7 @@ def main():
     sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
   agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
+  agent.set_mcploader(MCPLoader)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:
       print("fatal: you must at least a user prompt with -p or use -i for interactive")

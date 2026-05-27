@@ -94,6 +94,7 @@ class Agent:
       self.api_key = input("OPENAI_API_KEY > ").strip()
     self.base_url = base_url
     self.model = model
+    self.mcploader = None
     self.timeout = timeout
     self.req = {}
     if reasoning is not None:
@@ -111,30 +112,13 @@ class Agent:
     if max_output_tokens is not None:
       self.req["max_output_tokens"] = max_output_tokens
     self.tools = tools          # this is generic tools
-    # -design note-
-    # this has to stay in __init__ for tagged function calls
-    # from hatchery to work (least bad option). hatchery will
-    # manually add special calls to this, to handle hatchery-only
-    # 
-    # functionality (e.g. routing)
-    # the tradeoff is inflexibility in adjusting tools mid-prompt
-    # but this is good friction [tm] - otherwise the llm can add
-    # toolbox shell and toolbox term and it's all downhill from there
-    if len(self.tools) > 0: 
-      self.req["tools"] = []
-      for tl in self.tools:
-        self.req["tools"].append(fn_to_tool_json(tl))
-    elif "tools" in self.req.keys():
-      del(self.req["tools"])
 
   def flush_history(self):
     self.req["input"] = []  
 
-  def append_tagged_tool(self,func,tag,desc):
-    self.req["tools"].append(fn_to_tool_json(func,tag))
-    self.tools.append(func)
-    self.req["instructions"] += " " + desc
- 
+  def set_mcploader(self,mcploader):
+    self.mcploader = mcploader
+
   @property
   def headers(self) -> Dict[str, str]:
     hdr =  {
@@ -149,6 +133,15 @@ class Agent:
 
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
+    self.req["tools"] = []
+    if len(self.tools) > 0: 
+      # self.req["tools"] = []
+      for tl in self.tools:
+        self.req["tools"].append(fn_to_tool_json(tl))
+    if self.mcploader is not None:
+      self.req["tools"] += self.mcploader.get_json()
+    if len(self.req["tools"]) == 0:
+      del(self.req["tools"])
     local_retry = 0
     if user_input is not None:
       self.req["input"].append({"content":user_input,"role":"user"})
@@ -212,22 +205,20 @@ class Agent:
         if resp_obj["type"] == "function_call":
           RETN_TOOL = True
           fn_obj = None
-          fn_tag = None
           fn_name = resp_obj["name"]
-          if "-" in fn_name:
-            (fn_name, fn_tag) = fn_name.split("-")
+          fn_args = json.loads(resp_obj["arguments"])
           for i in self.tools:
             if i.__name__ == fn_name:
               fn_obj = i
               break
-          if fn_obj is None:
-            print("fatal: could not execute call '%s'" % fn_name)
-            return "fatal: could not execute call '%s'" % fn_name
-          fn_args = json.loads(resp_obj["arguments"])
-          if fn_tag is not None:
-            print("info: special call, tagged function")
-            respval = fn_obj(fn_tag,**fn_args)
-          else:
+          if fn_obj is None: # did not find the function
+            if self.mcploader is None:
+              print("fatal: could not execute call '%s'" % fn_name)
+              return "fatal: could not execute call '%s'" % fn_name
+            else:
+              print("info: attempting to pass to mcp loader")
+              self.mcploader.mcp_call(fn_name,fn_args)
+          else: # found the function first pass
             respval = fn_obj(**fn_args)
           if "id" in resp_obj.keys():
             CALL_ID = resp_obj["id"]
