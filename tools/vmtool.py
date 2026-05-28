@@ -33,12 +33,22 @@ CMD_FW = os.getenv("CMD_FW", default=None)
 if CMD_FW is not None:
   CMD_FW = [a.strip() for a in CMD_FW.split(",")]
 
+YELLOW_BRICK_ROAD = os.getenv("YELLOW_BRICK_ROAD",default="NO")
+if YELLOW_BRICK_ROAD == "ISO31000":
+  x = input("warn: YELLOW_BRICK_ROAD selected, are you sure? [yes/N] > ").strip()
+  if x != "yes":
+    print("fatal: YELLOW_BRICK_ROAD confirmation denied by user")
+    sys.exit(-1)
+
 def cmdfw(command):
-  global CMD_FW
+  global CMD_FW,YELLOW_BRICK_ROAD
   print("fw: firewalling '%s'" % command)
+  if YELLOW_BRICK_ROAD == "ISO31000":
+    print("fw: YELLOW_BRICK_ROAD mode, allowing command")
+    return True
   if CMD_FW is None:
     manual_allow = input("fw: CMD_FW whitelist unset. allow this once? [y/N] > ").rstrip()
-    if manual_allow == "y":
+    if (manual_allow == "y"):
       print("fw: command manually permitted")
       return True
     print("fw: command not permitted")
@@ -77,7 +87,10 @@ def shell_exec(command: Annotated[str, "The command to run"]):
     return fwreject()
   if RISK_ACCEPT is True:
     print("warn: I_ACCEPT_THE_RISK detected, running shell_exec('%s') locally" % command)
-    result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+      result = subprocess.run(command, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, errors="replace")
+    except subprocess.CalledProcessError as e:
+      return "process returned a non-zero status"
     return strip_terminal_colors(result.stdout)
   else:
     if VM_SSHARGS.startswith("ssh ") is False:
@@ -87,7 +100,10 @@ def shell_exec(command: Annotated[str, "The command to run"]):
     command = command.replace("*", "\\*")
     new_c = VM_SSHARGS + " '" + command + "'"
     print("info: shell_exec('%s') called" % new_c)
-    result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+      result = subprocess.run(new_c, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,errors="replace")
+    except subprocess.CalledProcessError as e:
+      return "process returned a non-zero status"
     return strip_terminal_colors(result.stdout)
 
 global PROCESS_HANDLE
@@ -106,7 +122,8 @@ def shell_interactive_start(command: Annotated[str, "The command to run"]):
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
       stderr=subprocess.STDOUT,
-      text=True
+      text=True,
+      errors="replace"
     )
   else:
     if VM_SSHARGS.startswith("ssh ") is False:
@@ -118,7 +135,8 @@ def shell_interactive_start(command: Annotated[str, "The command to run"]):
       stdin=subprocess.PIPE,
       stdout=subprocess.PIPE,
       stderr=subprocess.STDOUT,
-      text=True
+      text=True,
+      errors="replace"
     )
     
   print("info: starting async read queue")

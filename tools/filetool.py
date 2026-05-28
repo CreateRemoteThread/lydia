@@ -45,7 +45,7 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
     if os.path.isfile(realpath) is False:
       print("warn: os.path.isfile('%s') is False" % realpath)
       return "cannot open file (this is not a file, maybe a directory?)"
-    with open(realpath) as f:
+    with open(realpath,"r",encoding="utf-8",errors="replace") as f:
       f.seek(start)
       if bytes == -1:
         print("info: file_read asked to get -1 bytes, reading all")

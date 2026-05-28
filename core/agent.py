@@ -200,6 +200,10 @@ class Agent:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
         print("<<<" * 10)
+      if "output" not in resp.json().keys():
+        print("fatal: response did not contain 'output'")
+        print(json.dumps(resp.json(),indent=2))
+        sys.exit(-1)
       outputs = resp.json()["output"]
       for resp_obj in outputs:
         if resp_obj["type"] == "function_call":
