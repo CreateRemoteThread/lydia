@@ -11,8 +11,7 @@ import subprocess
 import queue, threading
 
 RISK_ACCEPT = os.getenv("I_ACCEPT_THE_RISK",default=None)
-VM_SSHARGS = os.getenv("VM_SSHARGS",default=None)
-# pseudomutex: just hold the process here.
+VM_SSHARGS = os.getenv("VM_SSHARGS",default="")
 PROCESS_LOCK = None
 PROCESS_RD_QUEUE = None
 PROCESS_RD_THREAD = None

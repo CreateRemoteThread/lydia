@@ -27,16 +27,17 @@ def loadTool(toolName):
     return r
 
 def loadPrompt(prompt):
-  if os.path.isfile(prompt):
-    with open(prompt,"r") as f:
-      try:
-        print("loading prompt from %s" % prompt)
-        return f.read()
-      except:
-        print("fatal: cannot open or read %s" % prompt)
-        sys.exit(-1)
-  else:
-    return prompt
+  return prompt
+  # if os.path.isfile(prompt):
+  #   with open(prompt,"r") as f:
+  #     try:
+  #       print("loading prompt from %s" % prompt)
+  #       return f.read()
+  #     except:
+  #       print("fatal: cannot open or read %s" % prompt)
+  #       sys.exit(-1)
+  # else:
+  #   return prompt
 
 def main():
   global Toolbox
