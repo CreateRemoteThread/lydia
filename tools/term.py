@@ -151,7 +151,7 @@ def term_interact(data: Annotated[str, "The data to send"]):
   global PROCESS_LOCK
   print("info: term_interact('%s') called" % data)
   data = PROCESS_LOCK.interact(data)
-  return "ok. screen scraped:\n" + data
+  return "ok"
 
 def term_kill():
   global PROCESS_LOCK

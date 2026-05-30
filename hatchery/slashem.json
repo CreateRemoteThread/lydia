@@ -3,9 +3,11 @@
   "nodes":[
     {
       "name":"SlashemLoader",
-      "usr_prompt":"Run 'slashem' interactively.",
-      "tools":["term_start","term_kill"],
-      "model":"gpt-4.1",
+      "type":"tool",
+      "tool_name":"term_start",
+      "tool_args":{
+        "command":"slashem"
+      },
       "next":"ScreenScraper"
     },
     {
@@ -14,11 +16,19 @@
       "tool_name":"term_screen_scrape",
       "tool_args":{},
       "save_output":"screen_scrape",
+      "next":"OverallGoalPlan"
+    },
+    {
+      "name":"OverallGoalPlan",
+      "usr_prompt":"You are playing slashem. Here is the screen:\n\n {{ ctx.screen_scrape }}\n\nWrite one sentence describing your current short-term objective. If you are at an information screen, your objective is to skip the information screen. If you are in the main game screen, your objective is to find the stairs to the next floor.",
+      "model":"gpt-5.1",
+      "save_output":"current_obj",
+      "write_output":"/var/tmp/slashem_goals.txt",
       "next":"NextMovePlan"
     },
     {
       "name":"NextMovePlan",
-      "usr_prompt":"You are playing slashem. Here is the screen:\n\n {{ ctx.screen_scrape }}\n\nDecide the next move to send. Send ' ' to skip information screens. Send 'h' to move left, 'l' to move right, 'j' to move south, 'k' to move north.",
+      "usr_prompt":"You are playing slashem. Here is the screen:\n\n {{ ctx.screen_scrape }}\n\nHere is your objective: {{ ctx.current_obj }}\n\nDecide the next move to send. Send ' ' to skip information screens. Send 'h' to move left, 'l' to move right, 'j' to move south, 'k' to move north.",
       "tools":["term_interact"],
       "model":"gpt-5.4",
       "next":"ScreenScraper"

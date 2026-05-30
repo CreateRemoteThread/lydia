@@ -4,7 +4,7 @@
 
 Playing roguelike games like "slashem" is an interesting challenge for an LLMs, as this is far too complex for a single LLM prompt interaction to solve. Our approach involves chaining multiple agents and fixed tool calls via the Hatchery system.
 
-![screenshot-1](docs/img/firstroom.png)
+![screenshot-1](img/firstroom.png)
 
 ### Further reading
 

@@ -4,11 +4,23 @@
 
 It is not reasonable to implement a complex workflow using a single instance of core.agent.Agent and one req_loop call, no matter how complex the prompting and toolset, or "how reasoning" the model is.
 
-Therefore, it is critical to build a way for agent instances to pass content to one another. 
+Therefore, it is critical to build a way for agent instances to pass content to one another.
 
 ### Architecture
 
-A Hatchery object represents a network of Drone(core.agent.Agent) objects, as described in a configuration JSON file (see hatchery/*). A drone can specify one or more "next" nodes:
+A Hatchery object represents a network of Baneling() or Drone(core.agent.Agent) objects ("nodes"), as described in a configuration JSON file (see hatchery/*).
+
+- A Baneling object is a static tool call.
+- A Drone object is an LLM inference call.
+
+Each node must implement:
+
+- node.run(self,ctx)
+- node.next
+- node.save_output
+- node.write_output
+
+A drone can specify one or more "next" nodes:
 
 - If a drone has zero next nodes (i.e. next is not present): hatchery will print the output of that drone and exit.
 - If a drone has exactly one next node: hatchery will run the next drone.

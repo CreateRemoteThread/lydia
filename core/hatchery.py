@@ -113,8 +113,8 @@ class Hatchery:
       if drone.save_output is not None:
         self.ctx[drone.save_output] = output
       if drone.write_output is not None:
-        with open(drone.write_output,"w") as f:
-          f.write(output)
+        with open(drone.write_output,"a") as f:
+          f.write(output + "\n")
         # self.ctx[drone.save_output] = output
       if drone.next is None:
         print(output)

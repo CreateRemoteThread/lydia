@@ -2,7 +2,7 @@
 
 ### Problem
 
-The primary consumer of tokens is memory - old tool calls, old outputs, admin fluff. Lydia handles this by assigning tool calls a configurable MEMORY_DELAY env var (defaulting to 6).
+The primary consumer of tokens is memory - old tool calls, old outputs, admin fluff. Lydia handles this by assigning tool calls a configurable MEMORY_DELAY env var (defaulting to 6). This is implemented in core.memory.
 
 Consider raising this for complex tasks (or maybe not forcing a random token generator to complete complex tasks? idk).
 
