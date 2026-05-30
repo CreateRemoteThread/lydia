@@ -2,14 +2,9 @@
 
 ### Problem
 
-While typical command-line utilities can be interacted with using line buffered input, this does not work for more important applications such as Slash'EM. To work around this, we use the 'pyte' library to emulate a terminal, and provide 4 interfaces to the LLM:
+Playing roguelike games like "slashem" is an interesting challenge for an LLMs, as this is far too complex for a single LLM prompt interaction to solve. Our approach involves chaining multiple agents and fixed tool calls via the Hatchery system.
 
-```
-- term_start
-- term_interact
-- term_screen_scrape
-- term_kill
-```
+![screenshot-1](docs/img/firstroom.png)
 
 ### Further reading
 

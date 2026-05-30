@@ -1,11 +1,27 @@
 {
-  "start":"SlashemPlayer",
+  "start":"SlashemLoader",
   "nodes":[
     {
-      "name":"SlashemPlayer",
-      "usr_prompt":"Run 'slashem' interactively. Use ' ' to skip any information screens. To play the game, use these inputs: 'h' moves left, 'l' moves right, 'k' moves up, 'j' moves down.",
-      "tools":["term_start","term_screen_scrape","term_locatechr","term_interact", "term_kill"],
-      "model":"gpt-5.1"
+      "name":"SlashemLoader",
+      "usr_prompt":"Run 'slashem' interactively.",
+      "tools":["term_start","term_kill"],
+      "model":"gpt-4.1",
+      "next":"ScreenScraper"
+    },
+    {
+      "name":"ScreenScraper",
+      "type":"tool",
+      "tool_name":"term_screen_scrape",
+      "tool_args":{},
+      "save_output":"screen_scrape",
+      "next":"NextMovePlan"
+    },
+    {
+      "name":"NextMovePlan",
+      "usr_prompt":"You are playing slashem. Here is the screen:\n\n {{ ctx.screen_scrape }}\n\nDecide the next move to send. Send ' ' to skip information screens. Send 'h' to move left, 'l' to move right, 'j' to move south, 'k' to move north.",
+      "tools":["term_interact"],
+      "model":"gpt-5.4",
+      "next":"ScreenScraper"
     }
   ]
 }

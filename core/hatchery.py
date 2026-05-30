@@ -10,14 +10,24 @@ import jinja2
 import tools
 from typing import Annotated
 
-# -design note-
-# We can use tools to deterministically force a choice between known
-# nodes/tools (i.e. offload error checking to the provider). However,
-# we can also just check the LLM's output. Experimenting with the second
-# path.
-def node_route(tag,fruit_count: Annotated[int, "The number of fruits"]):
-  print("special: node_route called with tag '%s', fruit count is %d" % (tag, fruit_count))
-  return "ok"
+# each node-compatible interface will implement:
+# __init__(self,...), because it must
+# run(self,ctx), which hatchery calls
+
+class Baneling:
+  def __init__(self,node_name,tool_name,tool_args={}):
+    print("baneling: initializing baneling '%s'" % node_name)
+    self.name = node_name
+    self.toolbox = tools.ToolLoader() # yuck, rethink later maybe
+    self.tool_func = self.toolbox.fetch(tool_name)
+    self.tool_args = tool_args
+    self.next = None
+    self.save_output = None
+    self.write_output = None
+
+  def run(self,ctx):
+    print("baneling: invoking function")
+    return self.tool_func(**self.tool_args) 
 
 class Drone(core.agent.Agent):
   def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):
@@ -37,9 +47,7 @@ class Drone(core.agent.Agent):
     # just don't allow fetch_toolbox("file")
     for t in _tools:
       self.avail_tools.append(t)
-      # self.avail_tools.append(self.toolbox.fetch(t))
     super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model,base_url=base_url)
-    # super().append_tagged_tool(node_route,"Drone","Use node_route-Drone when needed")
 
   def run(self,ctx):
     super().flush_history()
@@ -63,15 +71,25 @@ class Hatchery:
         self.ctx[i] = f.read()
       self.ctx[i] = input(user_inputs[i]).strip()  
     for node in self.nodegraph["nodes"]:
-      node_model =  node.get("model",os.getenv("OPENAI_DEFAULT_MODEL","gpt-4o"))
-      node_base_url =  node.get("base_url",os.getenv("OPENAI_BASE_URL","https://api.openai.com/v1"))
-      node_name =  node.get("name","%s" % uuid.uuid4())
-      sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
-      usr_prompt = node["usr_prompt"]
-      tools  = node.get("tools",[])
-      self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url)
-      self.nodes[node_name].save_output = node.get("save_output",None)
-      self.nodes[node_name].write_output = node.get("write_output",None)
+      node_type = node.get("type","ai") # default
+      if node_type == "ai":
+        node_model =  node.get("model",os.getenv("OPENAI_DEFAULT_MODEL","gpt-4o"))
+        node_base_url =  node.get("base_url",os.getenv("OPENAI_BASE_URL","https://api.openai.com/v1"))
+        node_name =  node.get("name","%s" % uuid.uuid4())
+        sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
+        usr_prompt = node["usr_prompt"]
+        tools  = node.get("tools",[])
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url)
+        self.nodes[node_name].save_output = node.get("save_output",None)
+        self.nodes[node_name].write_output = node.get("write_output",None)
+      elif node_type == "tool":
+        node_name = node.get("name","%s" % uuid.uuid4())
+        tool_name = node.get("tool_name",None)
+        tool_args = node.get("tool_args",{})
+        self.nodes[node_name] = Baneling(node_name,tool_name,tool_args)
+        self.nodes[node_name].save_output = node.get("save_output",None)
+        self.nodes[node_name].write_output = node.get("write_output",None)
+        self.nodes[node_name].next = node.get("next",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
 
   def run(self,ctx=None):
