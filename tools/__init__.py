@@ -5,6 +5,7 @@ import tools.vmtool
 import tools.minibrowser
 import tools.term
 import tools.chrome
+import tools.debug
 
 class ToolLoader:
   def registerFunction(self,name,function,func_desc):
@@ -34,6 +35,7 @@ class ToolLoader:
     self.registerFunction("term_interact",term.term_interact, "Use term_interact to write to the interactive process.")
     self.registerFunction("term_kill",term.term_kill, "Use term_kill to terminate the interactive process.")
     self.registerFunction("chrome_debug",chrome.devtools, "Use chrome.debug to send a request to a Chrome DevTools server at http://localhost:9222/ .")
+    self.registerFunction("debug_print",debug.debug_print, "Use debug_print to print a debugging message.")
 
   def fetch_toolbox(self,name):
     out = []

@@ -1,0 +1,15 @@
+{
+  "start":"ReviewEP",
+  "inputs":{
+    "srcfolder":"ctx.srcfolder: enter the source folder > ",
+    "focus_areas":"ctx.focusareas: enter focus areas > "
+  },
+  "nodes":[
+    {
+      "name":"ReviewEP",
+      "usr_prompt":"Review the files in {{ ctx.srcfolder }}, looking for any that relate to {{ ctx.focusareas }}. Call debug_print with a CSV list of files. Do not attempt to glob the whole directory at once. Use file_rg to confirm pulseaudio relevance.",
+      "tools":["file_rg","file_read","file_glob", "debug_print"],
+      "model":"gpt-5.4"
+    }
+  ]
+}

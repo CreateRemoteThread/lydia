@@ -27,7 +27,7 @@ class Baneling:
 
   def run(self,ctx):
     print("baneling: invoking function")
-    return self.tool_func(**self.tool_args) 
+    return self.tool_func(**self.tool_args)
 
 class Drone(core.agent.Agent):
   def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):

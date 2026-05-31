@@ -83,15 +83,14 @@ def file_write(filename: Annotated[str, "Name of the file to write to"], data: A
     sys.exit(-1)
   realpath = expanduser(normpath(filename))
   if realpath.startswith(FN_PREFIX) is False:
-    print("info: file_write, prefixing path with FN_PREFIX")
+    print("info: file_write prefixing path with FN_PREFIX")
     realpath = expanduser(normpath(FN_PREFIX + "/" + realpath))
   mode = "w"
   if append is True:
     mode = "a"
   with open(realpath,mode) as f:
     f.write(data)
-  return None
-
+  return "ok"
 
 def file_glob(pattern: Annotated[str, "Pattern to glob"]):
   global FN_PREFIX

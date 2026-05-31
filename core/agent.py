@@ -182,6 +182,7 @@ class Agent:
     if user_input is None:
       print("fatal: req_loop called with no user input, how did we get here?")
       sys.exit(-1)
+    send_user_input_once = True
     if len(self.asst_msg_queue) != 0:
       for a in self.asst_msg_queue:
         print("info: flushing assistant message from queue to input obj...")
@@ -194,15 +195,24 @@ class Agent:
         print(RETN_DATA)
       RETN_DATA = None
       RETN_TOOL = False
-      resp = self.req_single(user_input)
+      if send_user_input_once:
+        resp = self.req_single(user_input)
+        send_user_input_once = False
+      else:
+        resp = self.req_single(None)
       core.memory.memory_fade(self.req["input"])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
         print("<<<" * 10)
-      if "output" not in resp.json().keys():
-        print("fatal: response did not contain 'output'")
-        print(json.dumps(resp.json(),indent=2))
+      try:
+        if "output" not in resp.json().keys():
+          print("fatal: response did not contain 'output'")
+          print(json.dumps(resp.json(),indent=2))
+          sys.exit(-1)
+      except:
+        print("fatal: what the absolute fuck part 2")
+        print(resp)
         sys.exit(-1)
       outputs = resp.json()["output"]
       for resp_obj in outputs:
