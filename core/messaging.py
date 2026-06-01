@@ -97,7 +97,7 @@ class Agent:
     self.api_key = api_key
     if self.api_key is None:
       self.api_key = input("OPENAI_API_KEY > ").strip()
-    self.base_url = base_url + "/messages"
+    self.base_url = base_url.rstrip("/") + "/messages"
     self.model = model
     self.mcploader = None
     self.timeout = timeout
@@ -216,21 +216,21 @@ class Agent:
         print(json.dumps(resp.json(),indent=2))
         print("<<<" * 10)
       try:
-        if "output" not in resp.json().keys():
-          print("fatal: response did not contain 'output'")
+        if "content" not in resp.json().keys():
+          print("fatal: response did not contain 'content'")
           print(json.dumps(resp.json(),indent=2))
           sys.exit(-1)
       except:
         print("fatal: what the absolute fuck part 2")
         print(resp)
         sys.exit(-1)
-      outputs = resp.json()["output"]
+      outputs = resp.json()["content"]
       for resp_obj in outputs:
-        if resp_obj["type"] == "function_call":
+        if resp_obj["type"] == "tool_use":
           RETN_TOOL = True
           fn_obj = None
           fn_name = resp_obj["name"]
-          fn_args = json.loads(resp_obj["arguments"])
+          fn_args = resp_obj["input"]
           for i in self.tools:
             if i.__name__ == fn_name:
               fn_obj = i
@@ -254,20 +254,25 @@ class Agent:
           else:
             CALL_ID = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
           self.req["messages"].append({
-            "arguments":resp_obj["arguments"],
-            "call_id":CALL_ID,
+            "content":[{
+            "input":resp_obj["input"],
+            "id":CALL_ID,
             "name":resp_obj["name"],
-            "type":"function_call",
-            "status":"completed"
+            "type":"tool_use",
+            }],
+            "role":"assistant"
           })
           self.req["messages"].append({
-            "call_id":CALL_ID,
-            "output":respval,
-            "type":"function_call_output",
+            "role":"user",
+            "content":[{
+            "tool_use_id":CALL_ID,
+            "content":respval,
+            "type":"tool_result",
+            }]
           })
-        elif resp_obj["type"] == "message":
-          RETN_DATA = resp_obj["content"][0]["text"]
-          self.asst_msg_queue.append({"content":[{"type":"output_text","text":RETN_DATA}],"role":"assistant","type":"message"})
+        elif resp_obj["type"] == "text":
+          RETN_DATA = resp_obj["text"]
+          self.asst_msg_queue.append({"role":"assistant","content":RETN_DATA})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:

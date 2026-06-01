@@ -6,9 +6,10 @@ from typing import Annotated
 if os.getenv("OFF_WITH_HER_HEAD",default=None) is None:
   from core.agent import Agent
 else:
+  print("info: off with her head! using anthropic-compatible agent core")
   from core.messaging import Agent
-import core.memory
 import core.hatchery
+import core.memory
 import core.mcp
 import tools
 import getopt

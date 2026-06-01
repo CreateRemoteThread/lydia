@@ -93,7 +93,7 @@ class Agent:
     self.api_key = api_key
     if self.api_key is None:
       self.api_key = input("OPENAI_API_KEY > ").strip()
-    self.base_url = base_url + "/responses"
+    self.base_url = base_url.rstrip("/") + "/responses"
     self.model = model
     self.mcploader = None
     self.timeout = timeout
