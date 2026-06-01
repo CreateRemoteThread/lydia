@@ -144,7 +144,7 @@ class Agent:
       del(self.req["tools"])
     local_retry = 0
     if user_input is not None:
-      self.req["input"].append({"content":user_input,"role":"user"})
+      self.req["input"].append({"content":[{"type":"input_text","text":user_input}],"role":"user"})
     while local_retry < MAX_RETRY:
       try:
         if DEBUG_REQUESTS:
@@ -257,7 +257,7 @@ class Agent:
           })
         elif resp_obj["type"] == "message":
           RETN_DATA = resp_obj["content"][0]["text"]
-          self.asst_msg_queue.append({"content":RETN_DATA,"role":"assistant"})
+          self.asst_msg_queue.append({"content":[{"type":"input_text","text":RETN_DATA}],"role":"assistant"})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:
