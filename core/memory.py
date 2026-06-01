@@ -47,7 +47,7 @@ def do_load(filename,agent):
   try:
     with open(filename,"r") as f:
       data = json.loads(f.read())
-      agent.req["input"] = data
+      agent.req[agent.__sz_memory] = data
     print("mem: loaded context from '%s'" % filename)
   except:
     print("mem: error, could not load from '%s'" % filename)
@@ -83,12 +83,12 @@ def memory_dispatch(cmd,agent):
   print("mem: handling command of '%s'" % cmd)
   tokens = cmd.split()
   if cmd == "reset":
-    agent.req["input"] = []
+    agent.req[agent.__sz_memory] = []
     print("memory: context reset")
   elif cmd == "stats":
-    do_stats(agent.req["input"])
+    do_stats(agent.req[agent.__sz_memory])
   elif tokens[0] == "save" and len(tokens) == 2:
-    do_save(agent.req["input"],tokens[1])
+    do_save(agent.req[agent.__sz_memory],tokens[1])
   elif tokens[0] == "load" and len(tokens) == 2:
     do_load(tokens[1],agent)
   return

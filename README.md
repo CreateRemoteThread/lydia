@@ -29,6 +29,7 @@ You can set the following environment variables:
 - VM_SSHARGS (set to ssh lol@lolhost, this prefixes any shell_exec commands)
 - I_ACCEPT_THE_RISK (set to "ISO27001" to run commands locally, overrides VM_SSHARGS)
 - YELLOW_BRICK_ROAD (set to "ISO31000" to auto-approve all commands. if you use this and ai deletes your labubus, that's on you)
+- OFF_WITH_HER_HEAD (set to anything to enable experimental anthropic support. todo: tidy up code, make a new agent class to handle Anthropic API)
 ```
 
 To add a new tool:

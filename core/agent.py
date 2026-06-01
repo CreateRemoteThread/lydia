@@ -15,6 +15,12 @@ from typing import Dict
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+ANTHROPIC_MODE = os.getenv("OFF_WITH_HER_HEAD",default=None)
+if ANTHROPIC_MODE is None:
+  SZ_MEMORY = "input"
+else:
+  SZ_MEMORY = "messages"
+
 DEBUG_REQUESTS=os.getenv("DEBUG_REQUESTS",default=False)
 if DEBUG_REQUESTS is not False:
   print("info: DEBUG_REQUESTS set, dumping requests and response json")
@@ -74,11 +80,18 @@ def fn_to_tool_json(fn,tag=None):
     if tag is not None:
       fn_name += "-" + tag
 
+    if ANTHROPIC_MODE is None:
+      sz_type = "function"
+      sz_params = "parameters"
+    else:
+      sz_type = "custom"
+      sz_params = "input_schema"
+
     return {
-      "type": "function",
+      "type": sz_type,
       "name": fn_name,
       "description": inspect.getdoc(fn) or "",
-      "parameters": {
+      sz_params: {
         "type": "object",
         "properties": properties,
         "required": required,
@@ -88,11 +101,15 @@ def fn_to_tool_json(fn,tag=None):
 
 class Agent:
   def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
+    self.__sz_memory = SZ_MEMORY
     self.asst_msg_queue = []
     self.api_key = api_key
     if self.api_key is None:
       self.api_key = input("OPENAI_API_KEY > ").strip()
-    self.base_url = base_url
+    if ANTHROPIC_MODE is None:
+      self.base_url = base_url + "/responses"
+    else:
+      self.base_url = base_url + "/messages"
     self.model = model
     self.mcploader = None
     self.timeout = timeout
@@ -100,8 +117,12 @@ class Agent:
     if reasoning is not None:
       self.req["reasoning"] = {"effort":reasoning}
     self.req["include"] = []
-    self.req["input"] = []
-    self.req["instructions"] = sys_prompt
+    self.req[SZ_MEMORY] = []
+    if ANTHROPIC_MODE is None:
+      self.req["instructions"] = sys_prompt
+    else:
+      self.req["system"] = [{"type":"text","text":sys_prompt}]
+      self.req["max_tokens"] = os.getenv("ANTHROPIC_MAX_TOKENS",default=256000)
     self.req["metadata"] = None
     self.req["model"] = model
     self.req["stream"] = False
@@ -114,7 +135,7 @@ class Agent:
     self.tools = tools          # this is generic tools
 
   def flush_history(self):
-    self.req["input"] = []  
+    self.req[SZ_MEMORY] = []  
 
   def set_mcploader(self,mcploader):
     self.mcploader = mcploader
@@ -122,10 +143,15 @@ class Agent:
   @property
   def headers(self) -> Dict[str, str]:
     hdr =  {
-      "Authorization": f"Bearer {self.api_key}",
       "Content-Type": "application/json",
       "User-Agent": "lydia/0.0.3"
     }
+    # "Authorization": f"Bearer {self.api_key}",
+    if ANTHROPIC_MODE is None:
+      hdr["Authorization"] = f"Bearer {self.api_key}"
+    else:
+      hdr["x-api-key"] = self.api_key  
+      hdr["anthropic-version"] = "2023-06-01"
     x_portkey_provider = os.getenv("X_PORTKEY_PROVIDER",default=None)
     if x_portkey_provider is not None:
       hdr["x-portkey-provider"] = x_portkey_provider
@@ -144,7 +170,11 @@ class Agent:
       del(self.req["tools"])
     local_retry = 0
     if user_input is not None:
-      self.req["input"].append({"content":[{"type":"input_text","text":user_input}],"role":"user"})
+      if ANTHROPIC_MODE is None:
+        sz_type = "input_text"
+      else:
+        sz_type = "text"
+      self.req[SZ_MEMORY].append({"content":[{"type":sz_type,"text":user_input}],"role":"user"})
     while local_retry < MAX_RETRY:
       try:
         if DEBUG_REQUESTS:
@@ -152,7 +182,8 @@ class Agent:
           print(json.dumps(self.req,indent=2))
           print(">>>" * 10)
         response = requests.post(
-          f"{self.base_url}/responses",
+          self.base_url,
+          # f"{self.base_url}/responses",
           headers = self.headers,
           json = self.req,
           timeout = self.timeout,
@@ -186,7 +217,7 @@ class Agent:
     if len(self.asst_msg_queue) != 0:
       for a in self.asst_msg_queue:
         print("info: flushing assistant message from queue to input obj...")
-        self.req["input"].append(a)
+        self.req[SZ_MEMORY].append(a)
       self.asst_msg_queue = []
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
@@ -200,7 +231,7 @@ class Agent:
         send_user_input_once = False
       else:
         resp = self.req_single(None)
-      core.memory.memory_fade(self.req["input"])
+      core.memory.memory_fade(self.req[SZ_MEMORY])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
@@ -243,14 +274,14 @@ class Agent:
             CALL_ID = resp_obj["id"]
           else:
             CALL_ID = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
-          self.req["input"].append({
+          self.req[SZ_MEMORY].append({
             "arguments":resp_obj["arguments"],
             "call_id":CALL_ID,
             "name":resp_obj["name"],
             "type":"function_call",
             "status":"completed"
           })
-          self.req["input"].append({
+          self.req[SZ_MEMORY].append({
             "call_id":CALL_ID,
             "output":respval,
             "type":"function_call_output",
