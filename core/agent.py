@@ -257,7 +257,7 @@ class Agent:
           })
         elif resp_obj["type"] == "message":
           RETN_DATA = resp_obj["content"][0]["text"]
-          self.asst_msg_queue.append({"content":[{"type":"input_text","text":RETN_DATA}],"role":"assistant"})
+          self.asst_msg_queue.append({"content":[{"type":"output_text","text":RETN_DATA}],"role":"assistant","type":"message"})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
         else:
