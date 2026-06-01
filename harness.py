@@ -3,7 +3,10 @@
 import sys
 import os
 from typing import Annotated
-import core.agent
+if os.getenv("OFF_WITH_HER_HEAD",default=None) is None:
+  from core.agent import Agent
+else:
+  from core.messaging import Agent
 import core.memory
 import core.hatchery
 import core.mcp
@@ -91,7 +94,7 @@ def main():
     print("fatal: tool safety constraints enabled, but 0 tools selected")
     sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
-  agent = core.agent.Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
+  agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
   agent.set_mcploader(MCPLoader)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:

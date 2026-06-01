@@ -2,7 +2,10 @@
 
 import sys
 import os
-import core.agent
+if os.getenv("OFF_WITH_HER_HEAD",default=None) is None:
+  from core.agent import Agent
+else:
+  from core.messaging import Agent
 import core.memory
 import json
 import uuid
@@ -29,7 +32,7 @@ class Baneling:
     print("baneling: invoking function")
     return self.tool_func(**self.tool_args)
 
-class Drone(core.agent.Agent):
+class Drone(Agent):
   def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):
     print("drone: initializing drone '%s'" % node_name)
     self.toolbox = tools.ToolLoader()
