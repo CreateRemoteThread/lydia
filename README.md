@@ -30,7 +30,7 @@ You can set the following environment variables:
 - I_ACCEPT_THE_RISK (set to "ISO27001" to run commands locally, overrides VM_SSHARGS)
 - YELLOW_BRICK_ROAD (set to "ISO31000" to auto-approve all commands. if you use this and ai deletes your labubus, that's on you)
 - OFF_WITH_HER_HEAD (set to anything to enable experimental anthropic support. todo: tidy up code, make a new agent class to handle Anthropic API)
-- ANTHROPIC_MAX_TOKENS (required by openai, defaults 64000)
+- ANTHROPIC_MAX_TOKENS (required by anthropic, defaults 64000)
 ```
 
 To add a new tool:
