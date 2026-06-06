@@ -87,7 +87,7 @@ def fn_to_tool_json(fn,tag=None):
     }
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant. Use the ask_user tool to ask the user a question.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
+  def __init__(self, sys_prompt="You are a helpful assistant.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
     self.__sz_memory = "input"
     self.asst_msg_queue = []
     self.api_key = api_key

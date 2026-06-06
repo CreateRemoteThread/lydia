@@ -50,7 +50,7 @@ class Drone(Agent):
     # just don't allow fetch_toolbox("file")
     for t in _tools:
       self.avail_tools.append(t)
-    super().__init__(sys_prompt=sys_prompt + "\n" + self.toolbox.prompthelper(self.avail_tools),tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model,base_url=base_url)
+    super().__init__(sys_prompt=sys_prompt,tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model,base_url=base_url)
 
   def run(self,ctx):
     super().flush_history()

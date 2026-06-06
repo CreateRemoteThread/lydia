@@ -15,8 +15,9 @@ import tools
 import getopt
 import readline
 
-def ask_user(question: Annotated[str, "The question to ask"]):
+def ask_user(question: Annotated[str, "The question"]):
   return input(question + " > ").strip()
+ask_user.__doc__ = "Ask the user a question"
 
 Toolbox = tools.ToolLoader()
 MCPLoader = core.mcp.MCPLoader()
@@ -48,7 +49,7 @@ def main():
   CFG_INTERACTIVE = False
   CFG_USR_PROMPT = None
   CFG_PERSONALITY = "You are a helpful assistant."
-  CFG_SYS_PROMPT = "Use the ask_user tool to ask the user a question."
+  CFG_SYS_PROMPT = ""
   CFG_TOOLS = []
   CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
   CFG_REASONING = None
@@ -107,9 +108,9 @@ def main():
       if CFG_USR_PROMPT.startswith("!"):
         print("fatal: you cannot use core.memory.memory_dispatch with 0 memory")
         sys.exit(-1)
-  if len(CFG_TOOLS) >= 1:
-    print("info: using tools, attaching prompt helper string")
-    CFG_USR_PROMPT += "\n" + Toolbox.prompthelper(CFG_TOOLS)
+  # if len(CFG_TOOLS) >= 1:
+  #   print("info: using tools, attaching prompt helper string")
+  #   # CFG_USR_PROMPT += 
   if CFG_INTERACTIVE is False:
     result = agent.req_loop(CFG_USR_PROMPT)
     print(result)
