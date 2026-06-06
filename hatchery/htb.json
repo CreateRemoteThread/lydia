@@ -1,0 +1,24 @@
+{
+  "name":"htb",
+  "desc":"Attempt to solve a hack-the-box system.",
+  "start":"nmap-starter",
+  "inputs":{
+    "ip_addr":"ctx.ip_addr: enter ip address > "
+  },
+  "nodes":[
+    {
+      "name":"nmap-starter",
+      "type":"tool",
+      "tool_name":"shell_exec",
+      "tool_args":{
+        "command":"nmap -Pn --top-ports=1000 {{ ctx.ip_addr }}"
+      },
+      "save_output":"nmap_output",
+      "next":"recon-split"
+    },
+    {
+      "name":"recon-split",
+      "usr_prompt":"Here is the results of nmap: \n{{ ctx.nmap_output }}\n. Determine the next steps for vulnerability analysis. If you need to call this, call "
+    }
+  ]
+}

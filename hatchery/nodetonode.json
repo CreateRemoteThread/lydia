@@ -1,0 +1,17 @@
+{
+  "name":"route",
+  "desc":"test the node routing system",
+  "start":"FruitStoryBananas",
+  "nodes":[
+  {
+    "name":"FruitStoryBananas",
+    "usr_prompt":"Write a short story about bananas, 4 sentences. Then call StoryReviewer and output the result.",
+    "tools":["node:StoryReviewer"]
+  },
+  {
+    "name":"StoryReviewer",
+    "usr_prompt":"Here is a story: {{ ctx.input }}.\nReview the story. Output 'BananaNode' if the story is about bananas. Output 'GuavaNode' if the story is about guavas.",
+    "max_output_tokens":10
+  }
+  ]
+}

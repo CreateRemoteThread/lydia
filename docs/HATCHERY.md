@@ -10,8 +10,8 @@ Therefore, it is critical to build a way for agent instances to pass content to 
 
 A Hatchery object represents a network of Baneling() or Drone(core.agent.Agent) objects ("nodes"), as described in a configuration JSON file (see hatchery/*).
 
-- A Baneling object is a static tool call.
-- A Drone object is an LLM inference call.
+- A Baneling object is a static tool call ("type":"tool").
+- A Drone object is an LLM inference call (no type / default type).
 
 Each node must implement:
 
@@ -37,6 +37,16 @@ hatch:hatchery/bananwriter.json
 ```
 
 This will expose a single tool, according to the JSON "name" and "desc" properties. This function takes a single string (saved in the context as "input". The output of the final node is taken as the hatchery-tool's output.
+
+### Node-as-Tool
+
+It is also possible to load one node as a tool for another within Hatchery, using the following syntax in the hatchery JSON definition:
+
+```
+"tools":["node:SomeOtherNode"]
+```
+
+These are lazy-loaded - the first node can load the second without the second being defined, it is looked up at runtime. The first node can pass an input string to the second node, which is loaded in the second node as ctx.input (note: there is no consideration for threads).
 
 ### Reading material
 

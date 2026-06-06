@@ -29,13 +29,17 @@ class Baneling:
     self.write_output = None
 
   def run(self,ctx):
-    print("baneling: invoking function")
-    return self.tool_func(**self.tool_args)
+    fixed_args = {}
+    for t in self.tool_args.keys():
+      fixed_args[t] = jinja2.Template(self.tool_args[t]).render(ctx=ctx)
+    print("baneling: invoking function with fixed arguments")
+    return self.tool_func(**fixed_args)
 
 class Drone(Agent):
-  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):
+  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None):
     print("drone: initializing drone '%s'" % node_name)
     self.toolbox = tools.ToolLoader(Hatchery)
+    self.parent_hatchery = parent_hatchery # allows cross-node calls
     self.name = node_name
     self.usr_prompt = usr_prompt
     self.next = next
@@ -48,9 +52,13 @@ class Drone(Agent):
     # in an awkward position with file_write. in practice, there is no
     # good way to force models to use file_write appropriately - so
     # just don't allow fetch_toolbox("file")
+    self.node_tools = []
     for t in _tools:
-      self.avail_tools.append(t)
-    super().__init__(sys_prompt=sys_prompt,tools=[self.toolbox.fetch(t) for t in self.avail_tools],model=model,base_url=base_url)
+      if t.startswith("node:"):
+        self.node_tools.append(t[5:])
+      else:
+        self.avail_tools.append(t)
+    super().__init__(sys_prompt=sys_prompt,tools=[self.toolbox.fetch(t) for t in self.avail_tools] + [self.parent_hatchery.generate_fn(t) for t in self.node_tools],model=model,base_url=base_url)
 
   def run(self,ctx):
     super().flush_history()
@@ -59,6 +67,16 @@ class Drone(Agent):
     return super().req_loop(new_usr_prompt)
 
 class Hatchery:
+  def runNode(self,nodename,input_str):
+    self.ctx["input"] = input_str
+    return self.run(ctx=self.ctx,startNode=nodename)
+
+  def generate_fn(self,nodename):
+    temp_fn = lambda input_str: self.runNode(nodename,input_str) 
+    temp_fn.__name__ = nodename
+    temp_fn.__doc__ = "Call the node '%s'" % nodename
+    return temp_fn
+
   def __init__(self, fn):
     self.nodes = {}
     with open(fn) as f:
@@ -84,7 +102,7 @@ class Hatchery:
         sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
         usr_prompt = node["usr_prompt"]
         tools  = node.get("tools",[])
-        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url)
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
       elif node_type == "tool":
@@ -97,8 +115,9 @@ class Hatchery:
         self.nodes[node_name].next = node.get("next",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
 
-  def run(self,ctx=None):
-    if ctx is not None:
+  def run(self,ctx=None,startNode=None):
+    if ctx is not None and startNode is None:
+      # don't graft context from self to self, if we have startNode / we are doing node-to-node call
       ctx_grafted = 0
       ctx_collided = 0
       for i in ctx.keys():
@@ -110,9 +129,14 @@ class Hatchery:
           ctx_collided += 1
       print("hatchery: run() called with ctx graft, %d grafted, %d collided" % (ctx_grafted, ctx_collided))
       self.ctx = ctx
+    elif ctx is not None and startNode is not None:
+      print("hatchery: run() catching node-to-node call to '%s'" % startNode)
     else:
       print("hatchery: run() called with no context")
-    drone = self.nodes[self.start]
+    if startNode is not None:
+      drone = self.nodes[startNode]
+    else:
+      drone = self.nodes[self.start]
     while True:
       output = drone.run(self.ctx)
       if drone.save_output is not None:
