@@ -21,7 +21,7 @@ class Baneling:
   def __init__(self,node_name,tool_name,tool_args={}):
     print("baneling: initializing baneling '%s'" % node_name)
     self.name = node_name
-    self.toolbox = tools.ToolLoader() # yuck, rethink later maybe
+    self.toolbox = tools.ToolLoader(Hatchery) # yuck, rethink later maybe
     self.tool_func = self.toolbox.fetch(tool_name)
     self.tool_args = tool_args
     self.next = None
@@ -35,7 +35,7 @@ class Baneling:
 class Drone(Agent):
   def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None):
     print("drone: initializing drone '%s'" % node_name)
-    self.toolbox = tools.ToolLoader()
+    self.toolbox = tools.ToolLoader(Hatchery)
     self.name = node_name
     self.usr_prompt = usr_prompt
     self.next = next
@@ -64,6 +64,8 @@ class Hatchery:
     with open(fn) as f:
       self.nodegraph = json.loads(f.read())
     self.start = self.nodegraph["start"]
+    self.name = self.nodegraph["name"]
+    self.desc = self.nodegraph["desc"]
     user_inputs = self.nodegraph.get("inputs",{})
     file_inputs = self.nodegraph.get("files",{})
     self.ctx = {}
@@ -142,4 +144,4 @@ class Hatchery:
         print("hatchery: passing from '%s' to '%s'" % (drone.name, drone.next))
         drone = self.nodes[drone.next]
         continue
-      
+    return output 

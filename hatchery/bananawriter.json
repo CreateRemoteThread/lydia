@@ -1,0 +1,11 @@
+{
+  "name":"bananawriter",
+  "desc":"Write a short story about a bananas.",
+  "start":"FruitStoryBananas",
+  "nodes":[
+  {
+    "name":"FruitStoryBananas",
+    "usr_prompt":"Write a short story about bananas, 4 sentences maximum."
+  }
+  ]
+}

@@ -28,6 +28,16 @@ A drone can specify one or more "next" nodes:
 
 Output can be passed between nodes, using a shared context object which exists for the lifetime of the hatchery ("ctx"). Write to the output of ctx with "save_output", read from it with Jinja2 templating (ctx.varnamehere).
 
+### Hatchery-as-Tool / Agent-as-Tool
+
+Fundamentally, there should be no difference (to the LLM) between invoking an MCP, a hatchery, another agent or a regular function - all of these are functions. Therefore, an arbirary hatchery can be included as a tool. To do this, simply include a tool using this syntax:
+
+```
+hatch:hatchery/bananwriter.json
+```
+
+This will expose a single tool, according to the JSON "name" and "desc" properties. This function takes a single string (saved in the context as "input". The output of the final node is taken as the hatchery-tool's output.
+
 ### Reading material
 
 - [colony_agent](https://github.com/qriousec/colony_agent)

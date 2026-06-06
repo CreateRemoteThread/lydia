@@ -19,7 +19,7 @@ def ask_user(question: Annotated[str, "The question"]):
   return input(question + " > ").strip()
 ask_user.__doc__ = "Ask the user a question"
 
-Toolbox = tools.ToolLoader()
+Toolbox = tools.ToolLoader(core.hatchery.Hatchery)
 MCPLoader = core.mcp.MCPLoader()
 
 def loadTool(toolName):
@@ -85,7 +85,6 @@ def main():
       else:
         print("warn: cannot open persona '%s'" % val)
   if CFG_HATCHERY is not None:
-    print("hatchery: passing to core.hatchery. bye!")
     h = core.hatchery.Hatchery(CFG_HATCHERY)
     h.run()
     sys.exit(0)

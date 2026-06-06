@@ -1,4 +1,6 @@
 {
+  "name":"route",
+  "desc":"test the node routing system",
   "start":"FruitStoryBananas",
   "nodes":[
   {

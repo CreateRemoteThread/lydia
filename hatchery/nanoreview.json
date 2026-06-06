@@ -1,4 +1,6 @@
 {
+  "name":"nanoreview",
+  "desc":"Perform a source code review",
   "start":"ReviewSource",
   "inputs":{
     "srcfolder":"ctx.srcfolder: enter the source folder > ",
