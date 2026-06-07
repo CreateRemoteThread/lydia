@@ -1,2 +1,8 @@
+# for term_ tools
 pyte
+# for r2_ tools
 r2pipe
+# for vaporeon_ tools
+tree-sitter
+tree-sitter-c
+tree-sitter-cpp

@@ -2,7 +2,7 @@
 
 ![its lydia!](docs/img/lydia.png)
 
-Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [mcp](docs/MCP.md)
+Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [mcp](docs/MCP.md) | [htb](docs/HTB.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
