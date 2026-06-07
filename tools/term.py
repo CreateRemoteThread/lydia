@@ -55,6 +55,7 @@ def fwreject():
 
 class ProcessPty:
   def __init__(self,command):
+    global pyte
     try:
       import pyte
     except:

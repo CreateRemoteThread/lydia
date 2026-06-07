@@ -20,6 +20,7 @@ Use the following command line args:
 
 You can set the following environment variables:
 ```
+- STFU (set to anything to remove the ask_user tool from default context)
 - MEMORY_DECAY (how many turns tool calls stay in memory)
 - CMD_FW (comma-separated allowed commands for shell_ tools)
 - OPENAI_BASE_URL

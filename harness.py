@@ -19,7 +19,13 @@ def ask_user(question: Annotated[str, "The question"]):
   return input(question + " > ").strip()
 ask_user.__doc__ = "Ask the user a question"
 
+if os.getenv("STFU",default=None) is not None:
+  ASK_USER_ARR = []
+else:
+  ASK_USER_ARR = [ask_user]
+
 Toolbox = tools.ToolLoader(core.hatchery.Hatchery)
+
 MCPLoader = core.mcp.MCPLoader()
 
 def loadTool(toolName):
@@ -95,7 +101,7 @@ def main():
     print("fatal: tool safety constraints enabled, but 0 tools selected")
     sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
-  agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + [ask_user],model=CFG_MODEL,reasoning=CFG_REASONING)
+  agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + ASK_USER_ARR,model=CFG_MODEL,reasoning=CFG_REASONING)
   agent.set_mcploader(MCPLoader)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:
