@@ -30,6 +30,7 @@ class MCPHandlerStdio:
     line = self.proc.stdout.readline()
     if not line:
       print("fatal: mcp server unexpectedly died")
+      print(self.proc.stderr.read())
       sys.exit(-1)
     else:
       return json.loads(line).get("result")

@@ -12,6 +12,7 @@ Use the following command line args:
 - -p/--prompt: set the prompt
 - -m/--model: set the model
 - -t/--tool: load a single tool
+- --mcp "cmdline": start a stdio mcp
 - -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
 - -a/--agentic: experimental. load a json file for hatchery mode
 - --toolbox <name>: load a set of tools that start with name

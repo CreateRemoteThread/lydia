@@ -246,7 +246,7 @@ class Agent:
                 print("fatal: could not execute (or find in mcp) function '%s'" % fn_name)
                 return "fatal: could not execute (or find in mcp) function '%s'" % fn_name
               else:
-                return str(mcp_ret)
+                respval = str(mcp_ret)
           else: # found the function first pass
             respval = fn_obj(**fn_args)
           if "id" in resp_obj.keys():
