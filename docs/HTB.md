@@ -22,5 +22,5 @@ On this path, AI appears to stumble several times. Such as:
 - Cannot interact with FTP: We can work around this either with 'curl' or term_ tools. Neither is a great solution.
 - Misses IDOR id=0: This is a major problem. I don't think there is a solution for this at all. We can include prompting to "support" an IDOR skill, but this is just having more goes at the roulette table.
  
-After 6 (more, including error fixes) attempts, lydia was able to [capture this flag](docs/logs/htb-6.log).
+After 6 (more, including error fixes) attempts, lydia was able to [capture this flag](logs/htb-6.md).
 
