@@ -46,6 +46,8 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
       print("warn: os.path.isfile('%s') is False" % realpath)
       return "cannot open file (this is not a file, maybe a directory?)"
     with open(realpath,"r",encoding="utf-8",errors="replace") as f:
+      f.seek(0,2)
+      total_bytes = f.tell()
       f.seek(start)
       if bytes == -1:
         print("info: file_read asked to get -1 bytes, reading all")
@@ -55,12 +57,15 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
     if len(data) >= MAX_DATA:
       return "error: trying to return %d bytes, can only read %d at once" % (len(data),MAX_DATA)
     else:
-      return data
+      status_str = "ok, read %d out of %d bytes, %d remaining\n" % (len(data),total_bytes - start,total_bytes - start - len(data))
+      return status_str + data
   else:
     new_realpath = expanduser(normpath(FN_PREFIX + "/" + realpath))
     if os.path.isfile(new_realpath):
       print("info: file_read converted relative to absolute path")
       with open(realpath) as f:
+        f.seek(0,2)
+        total_bytes = f.tell()
         f.seek(start)
         if bytes == -1:
           print("info: file_read asked to get -1 bytes, reading all")
@@ -70,7 +75,8 @@ def file_read(filename: Annotated[str, "Name of the file to read"], start: Annot
       if len(data) >= MAX_DATA:
         return "error: trying to return %d bytes, can only read %d at once" % (len(data),MAX_DATA)
       else:
-        return data
+        status_str = "ok, read %d out of %d bytes, %d remaining\n" % (len(data),total_bytes - start,total_bytes - start - len(data))
+        return status_str + data
     else:
       print("warn: read from '%s' blocked by sandbox" % filename)
       return "error: cannot read file, no permission"
