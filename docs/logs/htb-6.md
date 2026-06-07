@@ -1,4 +1,4 @@
-warn: I_ACCEPT_THE_RISK set to ISO27001, running commands locally
+```warn: I_ACCEPT_THE_RISK set to ISO27001, running commands locally
 ctx.ip_addr: enter ip address > baneling: initializing baneling 'nmap-starter'
 info: attempting to grab tool 'shell_exec'
 drone: initializing drone 'recon-split'
@@ -65,6 +65,7 @@ info: shell_interactive_read returns nothing
 mem: purged 2 memories from context
 info: shell_interactive_read returned 33 bytes (33 stripped)
 mem: purged 2 memories from context
+```
 Got the user flag via FTP with `curl`.
 
 Flag:
