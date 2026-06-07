@@ -77,6 +77,7 @@ class MCPLoader:
     self.mcplist = []
 
   def load_mcp(self,mcpname):
+    print("mcp: loading '%s'" % mcpname)
     self.mcplist.append(MCPHandlerStdio(mcpname))
 
   def get_json(self):

@@ -7,6 +7,7 @@ if os.getenv("OFF_WITH_HER_HEAD",default=None) is None:
 else:
   from core.messaging import Agent
 import core.memory
+import core.mcp
 import json
 import uuid
 import jinja2
@@ -36,8 +37,9 @@ class Baneling:
     return self.tool_func(**fixed_args)
 
 class Drone(Agent):
-  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None):
+  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None,mcps=[]):
     print("drone: initializing drone '%s'" % node_name)
+    self.mcp_loader = core.mcp.MCPLoader()
     self.toolbox = tools.ToolLoader(Hatchery)
     self.parent_hatchery = parent_hatchery # allows cross-node calls
     self.name = node_name
@@ -58,10 +60,15 @@ class Drone(Agent):
         self.node_tools.append(t[5:])
       else:
         self.avail_tools.append(t)
+    for m in mcps:
+      # print("loading mcp '%s'" % m)
+      self.mcp_loader.load_mcp(m)
     super().__init__(sys_prompt=sys_prompt,tools=[self.toolbox.fetch(t) for t in self.avail_tools] + [self.parent_hatchery.generate_fn(t) for t in self.node_tools],model=model,base_url=base_url)
+    # print("ok")
 
   def run(self,ctx):
     super().flush_history()
+    super().set_mcploader(self.mcp_loader)
     template = jinja2.Template(self.usr_prompt)
     new_usr_prompt = template.render(ctx=ctx)
     return super().req_loop(new_usr_prompt)
@@ -102,7 +109,8 @@ class Hatchery:
         sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
         usr_prompt = node["usr_prompt"]
         tools  = node.get("tools",[])
-        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self)
+        mcps  = node.get("mcp",[])
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
       elif node_type == "tool":

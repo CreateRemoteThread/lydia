@@ -1,0 +1,12 @@
+{
+  "name":"mcp_test",
+  "desc":"test the mcp system within hatchery",
+  "start":"mcp_caller",
+  "nodes":[
+  {
+    "name":"mcp_caller",
+    "mcp":["python3 /home/test/software/vaporeon/vaporeon.py -l 1.db --mcp"],
+    "usr_prompt":"List the functions available. Call a function to get a flag. Output TRUE if you got a flag, output FALSE if you did not."
+  }
+  ]
+}
