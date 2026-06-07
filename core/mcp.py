@@ -63,7 +63,8 @@ class MCPHandlerStdio:
         }
       }
     )
-    self.send_notification("notification/initialized")
+    # removed: vibe-mcp shits itself with this
+    # self.send_notification("notification/initialized")
     r = self.send_request("tools/list")
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
