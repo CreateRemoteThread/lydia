@@ -63,6 +63,9 @@ def main():
   args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
+      if CFG_USR_PROMPT is not None:
+        print("fatal: do not supply -p twice")
+        sys.exit(-1)
       CFG_USR_PROMPT = loadPrompt(val)
     elif arg in ["-i","--interactive"]:
       CFG_INTERACTIVE = True
