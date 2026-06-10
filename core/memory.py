@@ -31,7 +31,7 @@ def memory_fade(input_array):
     call_id = try_get_callid(evt)
     if call_id is not None:
       if call_id not in MEMORY_FADE.keys():
-        print("mem: adding new memory: '%s'" % call_id)
+        # print("mem: adding new memory: '%s'" % call_id)
         MEMORY_FADE[call_id] = MEMORY_DECAY
       else:
         if MEMORY_FADE[call_id] == 0:
