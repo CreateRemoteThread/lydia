@@ -4,6 +4,7 @@ import json
 import subprocess
 import itertools
 import sys
+import os
 import copy
 
 class MCPHandlerStdio:
@@ -44,7 +45,8 @@ class MCPHandlerStdio:
     else:
       return cont
 
-  def __init__(self,command):
+  def __init__(self,cmd):
+    command = os.path.expanduser(cmd)
     self._id_counter = itertools.count(1)
     self.tool_names = []
     self.proc = subprocess.Popen(command.split(),
