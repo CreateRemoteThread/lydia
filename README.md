@@ -6,6 +6,21 @@ Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASH
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
+Some examples of how to use this tool:
+```# set up:
+export OPENAI_API_KEY=
+export OPENAI_BASE_URL=
+export OPENAI_DEFAULT_MODEL=
+# load all tools that start with "file". Do the prompt, then go to an interactive prompt (i.e. wait for user input). sandbox file operations to /var/tmp
+FN_SANDBOX=/var/tmp ./harness.py -p "Read files in /var/tmp and summarize anything about apples" -i --toolbox file
+# use the workflow saved in hatchery/slashem.json to play slashem. run the command locally (vs over ssh)
+I_ACCEPT_THE_RISK="ISO27001" ./harness.py -a hatchery/slashem.json
+# use anthropic mode messaging api, do the prompt only.
+export OPENAI_BASE_URL=https://api.anthropic.com/v1 
+export OFF_WITH_HER_HEAD=adsf
+./harness.py -p "write a story about bananas"
+```
+
 Use the following command line args:
 ```
 - -i/--interactive: interactive mode (i.e. chat interface)
