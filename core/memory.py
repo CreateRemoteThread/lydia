@@ -10,14 +10,28 @@ MEMORY_FADE = {}
 MEMORY_DECAY = os.getenv("MEMORY_DECAY",default="6")
 MEMORY_DECAY = int(MEMORY_DECAY)
 
+def try_get_callid(evt):
+  if "call_id" in evt.keys():    # openai / responses
+    return evt["call_id"]
+  elif "content" in evt.keys():  # anthropic / messaging
+    evc = evt["content"][0]
+    # print(evt["content"])
+    if evc["type"] == "tool_use":
+      return evc["id"] 
+    elif evc["type"] == "tool_result":
+      return evc["tool_use_id"] 
+  else:
+    return None
+
 # called every 'turn' to flush old tool calls from memory.
 def memory_fade(input_array):
   global MEMORY_FADE, MEMORY_DECAY
+  # print("calling memory fade")
   for evt in input_array:
-    if "call_id" in evt.keys():
-      call_id = evt["call_id"]
+    call_id = try_get_callid(evt)
+    if call_id is not None:
       if call_id not in MEMORY_FADE.keys():
-        # print("mem: adding new memory: '%s'" % call_id)
+        print("mem: adding new memory: '%s'" % call_id)
         MEMORY_FADE[call_id] = MEMORY_DECAY
       else:
         if MEMORY_FADE[call_id] == 0:
