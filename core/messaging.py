@@ -23,6 +23,16 @@ if DEBUG_REQUESTS is not False:
 
 MAX_RETRY = 10
 
+def anthropic_json_fix(fn_array):
+  out = []
+  for f in fn_array:
+    f["type"] = "custom"
+    if "input_schema" not in f.keys():
+      f["input_schema"] = f["parameters"]
+      f.pop("parameters")
+    out.append(f)
+  return out
+
 def fn_to_tool_json(fn,tag=None):
     """
     Convert an annotated Python function into an OpenAI Responses API tool schema.
@@ -147,7 +157,7 @@ class Agent:
       for tl in self.tools:
         self.req["tools"].append(fn_to_tool_json(tl))
     if self.mcploader is not None:
-      self.req["tools"] += self.mcploader.get_json()
+      self.req["tools"] += anthropic_json_fix(self.mcploader.get_json())
     if len(self.req["tools"]) == 0:
       del(self.req["tools"])
     local_retry = 0
@@ -224,6 +234,11 @@ class Agent:
         print("fatal: what the absolute fuck part 2")
         print(resp)
         sys.exit(-1)
+      if "stop_reason" in resp.json().keys():
+        stopreason = resp.json()["stop_reason"]
+        if stopreason == "refusal":
+          print("stop: refusal (stop_reason:%s)" % resp.json()["stop_details"]["category"])
+          sys.exit(-1)
       outputs = resp.json()["content"]
       for resp_obj in outputs:
         if resp_obj["type"] == "tool_use":
