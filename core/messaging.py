@@ -10,11 +10,11 @@ import time
 import random
 import string
 import core.memory
+import string
 from typing import Dict
 
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 
 DEBUG_REQUESTS=os.getenv("DEBUG_REQUESTS",default=False)
 if DEBUG_REQUESTS is not False:
@@ -102,7 +102,7 @@ def fn_to_tool_json(fn,tag=None):
 
 class Agent:
   def __init__(self, sys_prompt="You are a helpful assistant.", api_key=os.getenv("OPENAI_API_KEY",default=None), base_url=os.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
-    self.__sz_memory = "messages"
+    self._sz_memory = "messages"
     self.asst_msg_queue = []
     self.api_key = api_key
     if self.api_key is None:
@@ -236,7 +236,7 @@ class Agent:
         sys.exit(-1)
       if "stop_reason" in resp.json().keys():
         stopreason = resp.json()["stop_reason"]
-        if stopreason == "refusal":
+        if stopreason == "refusal" and resp.json()["stop_details"]["category"] != None:
           print("stop: refusal (stop_reason:%s)" % resp.json()["stop_details"]["category"])
           sys.exit(-1)
       outputs = resp.json()["content"]
@@ -288,7 +288,7 @@ class Agent:
         elif resp_obj["type"] == "text":
           RETN_DATA = resp_obj["text"]
           self.asst_msg_queue.append({"role":"assistant","content":RETN_DATA})
-        elif resp_obj["type"] == "reasoning":
+        elif resp_obj["type"] == "reasoning" or resp_obj["type"] == "thinking":
           print("Thinking...")
         else:
           print("fatal: don't know how to handle response object type '%s'" % resp_obj["type"])
