@@ -151,6 +151,7 @@ class Agent:
 
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
+    core.memory.memory_fade(self.req["messages"])
     self.req["tools"] = []
     if len(self.tools) > 0: 
       # self.req["tools"] = []
@@ -220,7 +221,7 @@ class Agent:
         send_user_input_once = False
       else:
         resp = self.req_single(None)
-      core.memory.memory_fade(self.req["messages"])
+      # core.memory.memory_fade(self.req["messages"])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))

@@ -60,6 +60,7 @@ def main():
   CFG_MODEL = os.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
   CFG_REASONING = None
   CFG_HATCHERY = None
+  DENIED_ALREADY = False
   args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
@@ -70,7 +71,13 @@ def main():
     elif arg in ["-i","--interactive"]:
       CFG_INTERACTIVE = True
     elif arg == "--mcp":
+      if DENIED_ALREADY:
+        print("fatal: --mcp after --mcp-deny, load your mcp first")
+        sys.exit(0)
       MCPLoader.load_mcp(val)
+    elif arg == "--mcp-deny":
+      DENIED_ALREADY = True
+      MCPLoader.deny_tool(val)
     elif arg in ["-a","--agentic"]:
       CFG_HATCHERY = val
     elif arg in ["-r","--reasoning"]:

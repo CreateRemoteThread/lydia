@@ -78,6 +78,13 @@ class MCPLoader:
   def __init__(self):
     self.mcplist = []
 
+  def deny_tool(self,toolname):
+    print("mcp: denying tool '%s'" % toolname)
+    for mcpserver in self.mcplist:
+      print("mcp: purging '%s' from server '%s'" % (toolname,mcpserver.name))
+      mcpserver.tools_json = [item for item in mcpserver.tools_json if item.get("name") != toolname]
+      mcpserver.tool_names = [item for item in mcpserver.tool_names if item != toolname]
+
   def load_mcp(self,mcpname):
     print("mcp: loading '%s'" % mcpname)
     self.mcplist.append(MCPHandlerStdio(mcpname))
