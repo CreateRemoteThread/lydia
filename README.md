@@ -2,24 +2,11 @@
 
 ![its lydia!](docs/img/lydia.png)
 
-Docs: [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [mcp](docs/MCP.md) | [htb](docs/HTB.md)
+Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [mcp](docs/MCP.md) | [htb](docs/HTB.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
-Some examples of how to use this tool:
-```# set up:
-export OPENAI_API_KEY=
-export OPENAI_BASE_URL=
-export OPENAI_DEFAULT_MODEL=
-# load all tools that start with "file". Do the prompt, then go to an interactive prompt (i.e. wait for user input). sandbox file operations to /var/tmp
-FN_SANDBOX=/var/tmp ./harness.py -p "Read files in /var/tmp and summarize anything about apples" -i --toolbox file
-# use the workflow saved in hatchery/slashem.json to play slashem. run the command locally (vs over ssh)
-I_ACCEPT_THE_RISK="ISO27001" ./harness.py -a hatchery/slashem.json
-# use anthropic mode messaging api, do the prompt only.
-export OPENAI_BASE_URL=https://api.anthropic.com/v1 
-export OFF_WITH_HER_HEAD=adsf
-./harness.py -p "write a story about bananas"
-```
+To get started, see [quickstart](docs/QUICKSTART.md).
 
 Use the following command line args:
 ```
@@ -38,7 +25,8 @@ Use the following command line args:
 You can set the following environment variables:
 ```
 - STFU (set to anything to remove the ask_user tool from default context)
-- MEMORY_DECAY (how many turns tool calls stay in memory)
+- MEMORY_DECAY (sets how aggressively memory decays. lower number = shorter memory)
+- CONSECRATE_MEMORY (set this to disable purging memory. tool calls are still purged)
 - CMD_FW (comma-separated allowed commands for shell_ tools)
 - OPENAI_BASE_URL
 - OPENAI_API_KEY
