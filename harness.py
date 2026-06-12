@@ -61,7 +61,7 @@ def main():
   CFG_REASONING = None
   CFG_HATCHERY = None
   DENIED_ALREADY = False
-  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp="])
+  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       if CFG_USR_PROMPT is not None:

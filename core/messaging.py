@@ -149,9 +149,16 @@ class Agent:
       hdr["x-portkey-provider"] = x_portkey_provider
     return hdr
 
+  def crashlanding(self):
+    prefix = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    fn = "%s.crash" % prefix
+    with open(fn,"w") as f:
+      f.write(json.dumps(self.req["self._sz_memory"],indent=2))
+    print("crash: dumping memory to %s" % fn)
+
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
-    core.memory.memory_fade(self.req["messages"])
+    # core.memory.memory_fade(self.req["messages"])
     self.req["tools"] = []
     if len(self.tools) > 0: 
       # self.req["tools"] = []
@@ -189,6 +196,7 @@ class Agent:
       except Exception as e:
         print("fatal: what the absolute fuck")
         print(e)
+        self.crashlanding()
         sys.exit(-1)
 
   def req_until_complete(self,user_input):
@@ -221,7 +229,7 @@ class Agent:
         send_user_input_once = False
       else:
         resp = self.req_single(None)
-      # core.memory.memory_fade(self.req["messages"])
+      core.memory.memory_fade(self.req["messages"])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
@@ -234,6 +242,7 @@ class Agent:
       except:
         print("fatal: what the absolute fuck part 2")
         print(resp)
+        self.crashlanding()
         sys.exit(-1)
       if "stop_reason" in resp.json().keys():
         stopreason = resp.json()["stop_reason"]

@@ -177,3 +177,6 @@ class Hatchery:
         drone = self.nodes[drone.next]
         continue
     return output 
+
+if __name__ == "__main__":
+  print("You probably want /r/vibecoding instead") 

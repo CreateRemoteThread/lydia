@@ -48,8 +48,13 @@ def memory_fade(input_array):
       memories_purged += 1
       # print("mem: purging call '%s' from context / memory" % i)
       del(MEMORY_FADE[i])
+  while len(input_array) > 3 * MEMORY_DECAY:
+    print("mem: deleting turn")
+    del(input_array[1])
+    del(input_array[1])
   if memories_purged != 0:
     print("mem: purged %d memories from context" % memories_purged)
+  
 
 def do_save(input_arr,filename):
   try:
