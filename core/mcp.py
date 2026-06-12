@@ -1,18 +1,64 @@
 #!/usr/bin/env python3
 
 import json
+import requests
 import subprocess
 import itertools
 import sys
 import os
 import copy
 
-class MCPHandlerStdio:
-  def send_notification(self,method,params=None):
+class MCPHandlerHttp:
+  def send_request(self,method,params={}):
+    return self.send_notification(method,params).get("result")
+
+  def fn_call(self,name,params):
+    r = self.send_request("tools/call",{"name":name,"arguments":params})
+    # print(json.dumps(r,indent=2))
+    cont = r.get("content")
+    if len(cont) == 1 and cont[0]["type"] == "text":
+      return cont[0]["text"]
+    else:
+      return cont
+
+  def send_notification(self,method,params={}):
+    request_id = next(self._id_counter)
     payload = {
       "jsonrpc":"2.0",
+      "id":request_id,
       "method":method,
-      "params":params or {}
+      "params":params
+    }
+    return requests.post(self.baseurl,json=payload).json()
+
+  def __init__(self,url):
+    self._id_counter = itertools.count(1)
+    self.baseurl = url
+    self.send_request("initialize",
+      {
+        "protocolVersion":"2024-11-05",
+        "capabilities":{},
+        "clientInfo":{
+          "name":"lydia",
+          "version":"-1"
+        }
+      }
+    )
+    self.tool_names = []
+    r = self.send_request("tools/list")
+    self.tools_json = r.get("tools",[])
+    for i in self.tools_json:
+      self.tool_names.append(i.get("name"))
+      i["parameters"] = i.pop("inputSchema") # do this once, here, at loading.
+
+class MCPHandlerStdio:
+  def send_notification(self,method,params={}):
+    request_id = next(self._id_counter)
+    payload = {
+      "jsonrpc":"2.0",
+      "id":request_id,
+      "method":method,
+      "params":params
     }
     self.proc.stdin.write(json.dumps(payload) + "\n")
     self.proc.stdin.flush()
@@ -86,8 +132,12 @@ class MCPLoader:
       mcpserver.tool_names = [item for item in mcpserver.tool_names if item != toolname]
 
   def load_mcp(self,mcpname):
-    print("mcp: loading '%s'" % mcpname)
-    self.mcplist.append(MCPHandlerStdio(mcpname))
+    if mcpname.startswith("http"):
+      print("mcp: loading http '%s'" % mcpname)
+      self.mcplist.append(MCPHandlerHttp(mcpname))
+    else:
+      print("mcp: loading stdio '%s'" % mcpname)
+      self.mcplist.append(MCPHandlerStdio(mcpname))
 
   def get_json(self):
     t = []
@@ -109,7 +159,8 @@ class MCPLoader:
     # sys.exit(0)
 
 if __name__ == "__main__":
-  print("start")
-  m = MCPLoader()
-  m.load_mcp("npx -y chrome-devtools-mcp@latest")
-  print(json.dumps(m.get_json(),indent=2))
+  print("You probably want /r/vibecoding instead")
+  # print("start")
+  # m = MCPLoader()
+  # m.load_mcp("npx -y chrome-devtools-mcp@latest")
+  # print(json.dumps(m.get_json(),indent=2))
