@@ -30,6 +30,8 @@ def anthropic_json_fix(fn_array):
     if "input_schema" not in f.keys():
       f["input_schema"] = f["parameters"]
       f.pop("parameters")
+    f.pop("annotations")
+    f.pop("execution")
     out.append(f)
   return out
 
