@@ -26,28 +26,29 @@ def try_get_callid(evt):
 # called every 'turn' to flush old tool calls from memory.
 def memory_fade(input_array):
   global MEMORY_FADE, MEMORY_DECAY
-  # print("calling memory fade")
-  for evt in input_array:
-    call_id = try_get_callid(evt)
-    if call_id is not None:
-      if call_id not in MEMORY_FADE.keys():
-        # print("mem: adding new memory: '%s'" % call_id)
-        MEMORY_FADE[call_id] = MEMORY_DECAY
-      else:
-        if MEMORY_FADE[call_id] == 0:
-          # print("mem: purging call '%s' from context" % call_id)
-          del(evt)
-          continue
+  if MEMORY_DECAY != -1:
+    for evt in input_array:
+      call_id = try_get_callid(evt)
+      if call_id is not None:
+        if call_id not in MEMORY_FADE.keys():
+          # print("mem: adding new memory: '%s'" % call_id)
+          MEMORY_FADE[call_id] = MEMORY_DECAY
         else:
-          MEMORY_FADE[call_id] -= 1
-  # cannot pass by ref (cannot modify list while it's being checked)
-  fl = [x for x in MEMORY_FADE.keys()]
-  memories_purged = 0
-  for i in fl:
-    if MEMORY_FADE[i] == 0:
-      memories_purged += 1
-      # print("mem: purging call '%s' from context / memory" % i)
-      del(MEMORY_FADE[i])
+          if MEMORY_FADE[call_id] == 0:
+            # print("mem: purging call '%s' from context" % call_id)
+            del(evt)
+            continue
+          else:
+            MEMORY_FADE[call_id] -= 1
+    # cannot pass by ref (cannot modify list while it's being checked)
+    fl = [x for x in MEMORY_FADE.keys()]
+    memories_purged = 0
+    for i in fl:
+      if MEMORY_FADE[i] == 0:
+        memories_purged += 1
+        del(MEMORY_FADE[i])
+  else:
+    print("mem: memory_decay is -1, preserving tool calls")
   if os.getenv("CONSECRATE_MEMORY",None) is None:
     while len(input_array) > 3 * MEMORY_DECAY:
       print("mem: deleting turn")
