@@ -7,13 +7,17 @@ import tools.term
 import tools.chrome
 import tools.debug
 import tools.r2tool
+import inspect
+
+class Namespace:
+  pass
 
 class ToolLoader:
   def registerHatchery(self,hatch_name):
     temp_h = self.HatcheryClass(hatch_name)
     self.hatch_store[temp_h.name] = temp_h
     h_name = temp_h.name # hatch_name is the file, h_name is the internal name
-    print("info: registering hatch '%s'" % h_name)
+    print("tools: registering hatch '%s'" % h_name)
     self.hatch_names[hatch_name] = h_name
     if h_name in self.tools.keys():
       print("warning: ToolLoader trying to register '%s' as hatchery, already loaded" % name)
@@ -30,7 +34,7 @@ class ToolLoader:
       self.tools[name].__doc__ = func_desc
  
   def run_hatch(self,hatch_name,input_str):
-    print("info: ToolLoader calling run_hatch(%s,%s)" % (hatch_name,input_str))
+    print("tools: ToolLoader calling run_hatch(%s,%s)" % (hatch_name,input_str))
     return self.hatch_store[hatch_name].run(ctx={"input":input_str})
     # return "ok"
  
@@ -39,6 +43,7 @@ class ToolLoader:
       raise ValueError("fatal: i didn't get hatcheryclass")
     else:
       self.HatcheryClass = HatcheryClass
+    self.exec_ns_array = []
     self.hatch_store = {}
     self.hatch_names = {}
     self.short_name_store = {}
@@ -65,23 +70,39 @@ class ToolLoader:
     self.registerFunction("r2_cmd",r2tool.r2_cmd, "Run an r2 command.")
     self.registerFunction("r2_close",r2tool.r2_close, "Close the r2 session.")
 
+  def load_pytool(self,name):
+    print("tools: loading pytool '%s'. caveat emptor..." % name)
+    namespace = {}
+    with open(name,"r") as f:
+      code = f.read()
+    ns = Namespace()
+    exec(code,ns.__dict__)
+    out = []
+    self.exec_ns_array.append(ns)
+    for i in ns.__dict__.keys():
+      if callable(ns.__dict__[i]):
+        print("tools: got a callable '%s'" % i)
+        self.registerFunction(i,ns.__dict__[i],ns.__dict__[i].__doc__ or "")
+        out.append(i)
+    return out
+
   def fetch_toolbox(self,name):
     out = []
     for i in self.tools.keys():
       if i.startswith(name):
         out.append(i)
-    print("info: fetch_toolbox(%s) returned %d results" % (name,len(out)))
+    print("tools: fetch_toolbox(%s) returned %d results" % (name,len(out)))
     return out
 
   def fetch(self,name):
-    print("info: attempting to grab tool '%s'" % name)
+    print("tools: attempting to grab tool '%s'" % name)
     if name.startswith("hatch:"):
       shortname = name[6:]
       if shortname in self.hatch_names.keys():
         # translate the name first.
         return self.tools[self.hatch_names[shortname]]
       else:
-        print("info: detected hatchery-as-tool pattern, passing")
+        print("tools: detected hatchery-as-tool pattern, passing")
         self.registerHatchery(shortname)
         return self.tools[self.hatch_names[shortname]]
     else:

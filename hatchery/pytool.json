@@ -1,0 +1,13 @@
+{
+  "name":"pytool",
+  "desc":"test the pytool system in the context of hatchery",
+  "start":"FruitStoryBananas",
+  "nodes":[
+  {
+    "name":"FruitStoryBananas",
+    "usr_prompt":"Use test_func1 to get the flag",
+    "pytools":["/var/tmp/pytool.py"],
+    "tools":["test_func1"]
+  }
+  ]
+}

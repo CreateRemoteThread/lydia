@@ -61,7 +61,7 @@ def main():
   CFG_REASONING = None
   CFG_HATCHERY = None
   DENIED_ALREADY = False
-  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny="])
+  args,extra = getopt.getopt(sys.argv[1:],"ip:s:t:m:r:a:",["interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny=","pytool="])
   for arg,val in args:
     if arg in ["-p","--prompt"]:
       if CFG_USR_PROMPT is not None:
@@ -91,6 +91,8 @@ def main():
       CFG_TOOLS.append(val)
     elif arg == "--toolbox":
       CFG_TOOLS += Toolbox.fetch_toolbox(val)
+    elif arg == "--pytool":
+      CFG_TOOLS += Toolbox.load_pytool(val)
     elif arg in ["-m","--model"]:
       CFG_MODEL = val
     elif arg == "--persona":

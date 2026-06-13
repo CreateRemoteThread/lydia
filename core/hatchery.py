@@ -37,10 +37,12 @@ class Baneling:
     return self.tool_func(**fixed_args)
 
 class Drone(Agent):
-  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None,mcps=[]):
+  def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None,mcps=[],pytools=[]):
     print("drone: initializing drone '%s'" % node_name)
     self.mcp_loader = core.mcp.MCPLoader()
     self.toolbox = tools.ToolLoader(Hatchery)
+    for p in pytools:
+      self.toolbox.load_pytool(p)
     self.parent_hatchery = parent_hatchery # allows cross-node calls
     self.name = node_name
     self.usr_prompt = usr_prompt
@@ -109,8 +111,9 @@ class Hatchery:
         sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
         usr_prompt = node["usr_prompt"]
         tools  = node.get("tools",[])
+        pytools = node.get("pytools",[])
         mcps  = node.get("mcp",[])
-        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps)
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps,pytools=pytools)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
       elif node_type == "tool":
