@@ -2,7 +2,7 @@
 
 ![its lydia!](docs/img/lydia.png)
 
-Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [mcp](docs/MCP.md) | [htb](docs/HTB.md)
+Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [tools](docs/TOOLS.md) | [htb](docs/HTB.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
@@ -40,13 +40,6 @@ You can set the following environment variables:
 - YELLOW_BRICK_ROAD (set to "ISO31000" to auto-approve all commands. if you use this and ai deletes your labubus, that's on you)
 - OFF_WITH_HER_HEAD (set to anything to enable experimental anthropic support. todo: tidy up code, make a new agent class to handle Anthropic API)
 - ANTHROPIC_MAX_TOKENS (required by anthropic, defaults 64000)
-```
-
-To add a new tool:
-
-```
-- Write the code in the tools/ directory
-- Register it in tools/__init__.py (in ToolLoader.__init__)
 ```
 
 You probably shouldn't be here, you probably want /r/vibecoding instead.
