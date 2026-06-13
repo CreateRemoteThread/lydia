@@ -49,7 +49,7 @@ def memory_fade(input_array):
         del(MEMORY_FADE[i])
   else:
     print("mem: memory_decay is -1, preserving tool calls")
-  if os.getenv("CONSECRATE_MEMORY",None) is None:
+  if os.getenv("CONSECRATE_MEMORY",None) is None and MEMORY_DECAY != -1:
     while len(input_array) > 3 * MEMORY_DECAY:
       print("mem: deleting turn")
       del(input_array[1])
