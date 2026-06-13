@@ -43,11 +43,13 @@ class ToolLoader:
       raise ValueError("fatal: i didn't get hatcheryclass")
     else:
       self.HatcheryClass = HatcheryClass
-    self.exec_ns_array = []
+    self.exec_ns_array = [] # store namespace objects
+    self.pytool_hooks = []  # store _load_pytool hooks
     self.hatch_store = {}
     self.hatch_names = {}
     self.short_name_store = {}
     self.tools = {}
+    self.registerFunction("file_mkdir",filetool.file_mkdir, "Make a new directory.")
     self.registerFunction("file_rg",filetool.file_rg, "Find files using rg.")
     self.registerFunction("file_read",filetool.file_read, "Read a file.")
     self.registerFunction("file_write",filetool.file_write, "Write to a file.")
@@ -70,6 +72,11 @@ class ToolLoader:
     self.registerFunction("r2_cmd",r2tool.r2_cmd, "Run an r2 command.")
     self.registerFunction("r2_close",r2tool.r2_close, "Close the r2 session.")
 
+  def execute_pytool_hooks(self,agent):
+    for f in self.pytool_hooks:
+      print("tools: executing pytool hook...")
+      f(agent)
+
   def load_pytool(self,name):
     print("tools: loading pytool '%s'. caveat emptor..." % name)
     namespace = {}
@@ -81,9 +88,13 @@ class ToolLoader:
     self.exec_ns_array.append(ns)
     for i in ns.__dict__.keys():
       if callable(ns.__dict__[i]):
-        print("tools: got a callable '%s'" % i)
-        self.registerFunction(i,ns.__dict__[i],ns.__dict__[i].__doc__ or "")
-        out.append(i)
+        if i == "_load_pytool":
+          print("tools: got special _load_pytool, storing agent")
+          self.pytool_hooks.append(ns.__dict__[i])
+        else:
+          print("tools: got a callable '%s'" % i)
+          self.registerFunction(i,ns.__dict__[i],ns.__dict__[i].__doc__ or "")
+          out.append(i)
     return out
 
   def fetch_toolbox(self,name):

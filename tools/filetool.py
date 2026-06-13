@@ -34,6 +34,22 @@ def file_rg(pattern: Annotated[str, "pattern to pass to search for with ripgrep.
   else:
     return f"error: ripgrep failed: {result.stderr.strip()}"
 
+def file_mkdir(dirname: Annotated[str, "Name of directory to create"]):
+  global FN_PREFIX
+  if FN_PREFIX is None:
+    print("fatal: you must specify FN_SANDBOX env")
+    sys.exit(-1)
+  realpath = expanduser(normpath(dirname))
+  if realpath.startswith(FN_PREFIX) is False:
+    print("info: file_mkdir outside sandbox, normalizing path")
+    realpath = "/".join([FN_PREFIX,realpath])
+  if os.path.isdir(realpath):
+    return "error: directory already exists"
+  elif os.path.isfile(realpath):
+    return "error: file already exists"
+  os.mkdir(realpath)
+  return "ok"
+
 def file_read(filename: Annotated[str, "Name of the file to read"], start: Annotated[int, "Location to start reading from"], bytes: Annotated[int, "Number of bytes to read. Use -1 to read the whole file."]):
   global FN_PREFIX, MAX_DATA
   print("info: file_read(%s,%d,%d) called" % (filename,start,bytes))
@@ -89,8 +105,7 @@ def file_write(filename: Annotated[str, "Name of the file to write to"], data: A
     sys.exit(-1)
   realpath = expanduser(normpath(filename))
   if realpath.startswith(FN_PREFIX) is False:
-    print("info: file_write prefixing path with FN_PREFIX")
-    realpath = expanduser(normpath(FN_PREFIX + "/" + realpath))
+    realpath = "/".join([FN_PREFIX,realpath])
   mode = "w"
   if append is True:
     mode = "a"

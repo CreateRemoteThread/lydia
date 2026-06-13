@@ -251,6 +251,7 @@ class Agent:
               else:
                 respval = str(mcp_ret)
           else: # found the function first pass
+            print("info: calling regular function '%s'" % fn_name)
             respval = fn_obj(**fn_args)
           if "id" in resp_obj.keys():
             CALL_ID = resp_obj["id"]

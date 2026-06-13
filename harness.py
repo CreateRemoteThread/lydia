@@ -115,6 +115,7 @@ def main():
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
   agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + ASK_USER_ARR,model=CFG_MODEL,reasoning=CFG_REASONING)
   agent.set_mcploader(MCPLoader)
+  Toolbox.execute_pytool_hooks(agent)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:
       print("fatal: you must at least a user prompt with -p or use -i for interactive")

@@ -43,6 +43,7 @@ class Drone(Agent):
     self.toolbox = tools.ToolLoader(Hatchery)
     for p in pytools:
       self.toolbox.load_pytool(p)
+    self.toolbox.execute_pytool_hooks(self)
     self.parent_hatchery = parent_hatchery # allows cross-node calls
     self.name = node_name
     self.usr_prompt = usr_prompt

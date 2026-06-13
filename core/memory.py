@@ -105,11 +105,11 @@ def do_stats(input_arr):
   print("mem: %d unique function calls, %d bytes" % (len(fc_ids), func_data))
 
 def memory_dispatch(cmd,agent):
-  print(agent)
-  print(agent._sz_memory)
+  # print(agent)
+  # print(agent._sz_memory)
   print("mem: handling command of '%s'" % cmd)
   tokens = cmd.split()
-  if cmd == "reset":
+  if cmd == "reset" or cmd == "flush":
     agent.req[agent._sz_memory] = []
     print("memory: context reset")
   elif cmd == "stats":
