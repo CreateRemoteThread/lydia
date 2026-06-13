@@ -8,9 +8,9 @@ To write a tool, simply:
 
 - add a new file in tools, with the functions you want
   - use typing.Annotations to help give "hints" to the LLM (these are sent in the JSON-RPC objects)
-  - use function.__doc__ if you don't want to do annotations
+  - use function.\_\_doc\_\_ if you don't want to do annotations
   - if you don't use either, the LLM *may* not have information how or when to invoke your tool. you can explicitly include it in the prompt
-- add a registerFunction call in tools/__init__
+- add a registerFunction call in tools/\_\_init\_\_
 - load the tool at runtime with -t or --toolbox
 
 Anthropic has a number of custom tool types (e.g. "web_browser_123123132"), which we simply ignore - every tool is treated equally ("custom").
@@ -39,14 +39,15 @@ Skills are implemented in Claude Code as a combination of an MD file, some scrip
 
 In effect, when Great Master Altman and King Amodei decide you are allowed to use your skill, the rest of SKILL.md is loaded as a conversation turn, and the scripts etc in the skill package are just executed with the bash tool.
 
-This runs a bit contrary to Lydia's design - instead of loading down the prompt, the hatchery system can be used to pass the "skill" to another node. Therefore, "skills" are not implemented in Lydia, and will not ever be.
+This runs counter to Lydia's design, as this is simply allowing a tool to edit the conversation history of an agent. Therefore, "skills" are implemented as extensions to pytools - see below.
 
 ### Pytools
 
 It is possible to load Python files and automatically export their callable objects (i.e. global functions). To do this:
 
 - write and save your python file, with global callable objects (e.g. funcs)
-  - use __doc__ or typing.Annotations for each callable, to provide hints, exposed to the LLM via jsonrpc
+  - use \_\_doc\_\_ or typing.Annotations for each callable, to provide hints, exposed to the LLM via jsonrpc
+  - implement _load_pytool(agent) - this will get called, letting the pytool get access to the calling agent object (i.e. allowing meta-prompting by editing the agent's chat history)
 - use --pytool [path_to_py] on the commandline
 - see hatchery/pytool.json for an example of how to let ai nodes execute pytools
 
