@@ -39,6 +39,13 @@ def getcfg(varname,default=None):
   else:
     return default
 
+def setenv(varname,val):
+  global CFG_GLOBAL
+  if CFG_GLOBAL is None:
+    return False
+  CFG_GLOBAL[varname] = val
+  return True
+
 def getenv(varname,default=None):
   global CFG_GLOBAL
   if CFG_GLOBAL is None:

@@ -9,6 +9,8 @@ import os
 import copy
 import core.config
 
+SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
+
 class MCPHandlerHttp:
   def send_request(self,method,params={}):
     return self.send_notification(method,params).get("result")
@@ -23,6 +25,7 @@ class MCPHandlerHttp:
       return cont
 
   def send_notification(self,method,params={}):
+    global SSL_VERIFY
     request_id = next(self._id_counter)
     payload = {
       "jsonrpc":"2.0",
@@ -30,7 +33,7 @@ class MCPHandlerHttp:
       "method":method,
       "params":params
     }
-    data = self.session.post(self.baseurl,json=payload)
+    data = self.session.post(self.baseurl,json=payload,verify=SSL_VERIFY)
     return data.json()
 
   def __init__(self,url):
@@ -59,6 +62,7 @@ class MCPHandlerHttp:
 
 class MCPHandlerSSE(MCPHandlerHttp):
   def send_notification(self,method,params={}):
+    global SSL_VERIFY
     request_id = next(self._id_counter)
     payload = {
       "jsonrpc":"2.0",
@@ -66,7 +70,7 @@ class MCPHandlerSSE(MCPHandlerHttp):
       "method":method,
       "params":params
     }
-    resp = self.session.post(self.baseurl,json=payload,headers=self._hdrs,stream=True)
+    resp = self.session.post(self.baseurl,json=payload,headers=self._hdrs,stream=True,verify=SSL_VERIFY)
     if resp.headers.get("Mcp-Session-Id",None) is not None:
       print("mcp: got mcp-session-id header")
       self._hdrs["Mcp-Session-Id"] = resp.headers.get("Mcp-Session-Id",None)

@@ -26,6 +26,7 @@ Use the following command line args:
 
 You can set the following environment variables (note that these are overridden by -c's configuration file):
 ```
+- SSL_VERIFY (set to anything but "True" to disable requests ssl verification)
 - STFU (set to anything to remove the ask_user tool from default context)
 - MEMORY_DECAY (sets how aggressively memory decays. lower number = shorter memory)
 - MCP_CREDFILE (points to comma separated list of url,bearer token)
@@ -36,7 +37,10 @@ You can set the following environment variables (note that these are overridden 
 - OPENAI_DEFAULT_MODEL
 - DEBUG_REQUESTS (set to any value to enable dumping requests)
 - X_PORTKEY_PROVIDER (if you're using portkey)
-- FN_SANDBOX (set to absolute path, file operations are constrained here)
+- FN_PREFIX
+  - The "file sandbox" is this env var (comma-separated) + /tmp, /var/tmp, /private/tmp + current directory.
+  - All file_ tools are constrained to this directory.
+  - By default, this tool is able to create, edit, delete anything in it's cwd
 - VM_SSHARGS (set to ssh lol@lolhost, this prefixes any shell_exec commands)
 - I_ACCEPT_THE_RISK (set to "ISO27001" to run commands locally, overrides VM_SSHARGS)
 - YELLOW_BRICK_ROAD (set to "ISO31000" to auto-approve all commands. if you use this and ai deletes your labubus, that's on you)

@@ -18,7 +18,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEBUG_REQUESTS = None
-
+SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
 MAX_RETRY = 10
 
 def anthropic_json_fix(fn_array):
@@ -132,6 +132,7 @@ class Agent:
     self.tools = tools          # this is generic tools
 
   def flush_history(self):
+    self.asst_msg_queue = []
     self.req["messages"] = []  
 
   def set_mcploader(self,mcploader):
@@ -180,13 +181,14 @@ class Agent:
           print(">>>" * 10)
           print(json.dumps(self.req,indent=2))
           print(">>>" * 10)
+        global SSL_VERIFY
         response = requests.post(
           self.base_url,
           # f"{self.base_url}/responses",
           headers = self.headers,
           json = self.req,
           timeout = self.timeout,
-          verify=False
+          verify=SSL_VERIFY
         )
         return response
       except requests.exceptions.ReadTimeout:
