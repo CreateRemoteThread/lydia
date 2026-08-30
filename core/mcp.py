@@ -5,9 +5,14 @@ import requests
 import subprocess
 import itertools
 import sys
+import re
+import string
+import hashlib
 import os
 import copy
+import random
 import core.config
+import core.oauth
 
 SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
 
@@ -59,6 +64,38 @@ class MCPHandlerHttp:
       if "icons" in i.keys():
         # print("mcp: tokenmaxer scum detected. removing icons")
         i.pop("icons")
+
+class MCPHandler3LO(MCPHandlerHttp):
+  def send_request(self,method,params={}):
+    global SSL_VERIFY
+    request_id = next(self._id_counter)
+    payload = {
+      "jsonrpc":"2.0",
+      "id":request_id,
+      "method":method,
+      "params":params or {}
+    }
+    r = self.session.post(self.url,json=payload)
+    if r.status_code == 401:
+      self.auth_hdrs = core.oauth.OauthImpl(r.headers.get("WWW-Authenticate"),self.url)
+    else:
+      print(r.content)
+
+  def __init__(self,url):
+    self.url = url
+    self._id_counter = itertools.count(1)
+    self.session = requests.Session()
+    self.send_request("initialize",params={ 
+        "protocolVersion":"2024-11-05",
+        "capabilities":{},
+        "clientInfo":{
+          "name":"lydia",
+          "version":"-1"
+        }
+      })
+    # self.session.post(url,verify=SSL_VERIFY)
+    # print(resp.content)
+    sys.exit(0)
 
 class MCPHandlerSSE(MCPHandlerHttp):
   def send_notification(self,method,params={}):
@@ -197,6 +234,9 @@ class MCPLoader:
     elif mcpname.startswith("sse+"):
       print("mcp: loading sse http '%s'" % mcpname)
       self.mcplist.append(MCPHandlerSSE(mcpname[4:]))
+    elif mcpname.startswith("3lo+"):
+      print("mcp: loading 3lo http '%s'" % mcpname)
+      self.mcplist.append(MCPHandler3LO(mcpname[4:]))
     else:
       print("mcp: loading stdio '%s'" % mcpname)
       self.mcplist.append(MCPHandlerStdio(mcpname))

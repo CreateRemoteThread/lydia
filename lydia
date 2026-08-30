@@ -52,6 +52,7 @@ def main():
   CFG_REASONING = None
   CFG_HATCHERY = None
   DENIED_ALREADY = False
+  core.config.defaultcfg()
   args,extra = getopt.getopt(sys.argv[1:],"ic:p:s:t:m:r:a:",["cfg=","interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny=","pytool="])
   for arg,val in args:
     if arg in ["-c","--cfg"]:
@@ -95,7 +96,6 @@ def main():
           CFG_PERSONALITY = f.read()
       else:
         print("warn: cannot open persona '%s'" % val)
-  core.config.defaultcfg()
   EXTRA_TOOLS = core.config.getcfg("EXTRA_TOOLS",default=[])
   for tool in EXTRA_TOOLS:
     CFG_TOOLS.append(tool) 

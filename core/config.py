@@ -28,6 +28,8 @@ def initcfg(filename):
     return
   with open(filename,"r") as f:
     print("cfg: loading config '%s'" % filename)
+    if CFG_GLOBAL is not None:
+      print("cfg: overwriting existing config")
     CFG_GLOBAL = json.loads(f.read())
 
 def getcfg(varname,default=None):
@@ -45,6 +47,18 @@ def setenv(varname,val):
     return False
   CFG_GLOBAL[varname] = val
   return True
+
+def getsubvar(catname,varname,default=None):
+  global CFG_GLOBAL
+  if CFG_GLOBAL is None:
+    return default
+  if catname in CFG_GLOBAL.keys():
+    try:
+      return CFG_GLOBAL[catname][varname]
+    except:
+      return default
+  else:
+    return default
 
 def getenv(varname,default=None):
   global CFG_GLOBAL
