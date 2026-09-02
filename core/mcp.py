@@ -57,6 +57,7 @@ class MCPHandlerHttp:
     )
     self.tool_names = []
     r = self.send_request("tools/list")
+    # print(r)
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
       self.tool_names.append(i.get("name"))
@@ -75,30 +76,38 @@ class MCPHandler3LO(MCPHandlerHttp):
       "method":method,
       "params":params or {}
     }
-    r = self.session.post(self.url,json=payload)
-    if r.status_code == 401:
-      self.auth_hdrs = core.oauth.OauthImpl(r.headers.get("WWW-Authenticate"),self.url)
-    else:
-      print(r.content)
+    event = {}
+    resp = self.session.post(self.url,json=payload,headers=self._hdrs,stream=True,verify=SSL_VERIFY)
+    # r = self.session.post(self.url,json=payload,headers=self._hdrs,stream=True,verify=SSL_VERIFY)
+    if resp.status_code == 401:
+      print("mcp: 401, passing to core/oauth")
+      self.mcp_auth = core.oauth.OauthImpl(resp.headers.get("WWW-Authenticate"),self.url)
+      self._hdrs = self.mcp_auth.get_auth_hdrs()
+      self._hdrs["Accept"]="application/json,text/event-stream"
+      resp = self.session.post(self.url,json=payload,headers=self._hdrs,verify=SSL_VERIFY,stream=True)
+    if resp.headers.get("Mcp-Session-Id",None) is not None:
+      print("mcp: got mcp-session-id header")
+      self._hdrs["Mcp-Session-Id"] = resp.headers.get("Mcp-Session-Id",None)
+    for line in resp.iter_lines(decode_unicode=True):
+      if not line:
+        continue
+      if line.startswith(":"): # comment
+        continue
+      # print(line)
+      field,_,val = line.partition(":")
+      if field == "data":
+        event["data"] = event.get("data","") + val.strip()
+      else:
+        event[field] = val
+    return json.loads(event["data"])["result"]
 
   def __init__(self,url):
     self.url = url
-    self._id_counter = itertools.count(1)
-    self.session = requests.Session()
-    self.send_request("initialize",params={ 
-        "protocolVersion":"2024-11-05",
-        "capabilities":{},
-        "clientInfo":{
-          "name":"lydia",
-          "version":"-1"
-        }
-      })
-    # self.session.post(url,verify=SSL_VERIFY)
-    # print(resp.content)
-    sys.exit(0)
+    self._hdrs = {}
+    MCPHandlerHttp.__init__(self,url)
 
 class MCPHandlerSSE(MCPHandlerHttp):
-  def send_notification(self,method,params={}):
+  def send_request(self,method,params={}):
     global SSL_VERIFY
     request_id = next(self._id_counter)
     payload = {
@@ -123,7 +132,7 @@ class MCPHandlerSSE(MCPHandlerHttp):
         event["data"] = event.get("data","") + val.strip()
       else:
         event[field] = val
-    return json.loads(event["data"])
+    return json.loads(event["data"])["result"]
 
   def get_credential(self,url,fn):
     with open(fn,"r") as f:

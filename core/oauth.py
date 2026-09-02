@@ -2,6 +2,7 @@
 
 import requests
 import random
+import base64
 import time
 import hashlib
 import string
@@ -61,9 +62,9 @@ SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
 
 class OauthImpl:
   def dynamic_register_client(self,reg_url):
-    global CALLBACK_PORT
+    global CALLBACK_PORT, SSL_VERIFY
     print("oauth: attempting dynamic client registration as 'lydia'")
-    pp = requests.post(reg_url,json = {"client_name":"lydia","redirect_uris":["http://localhost:%d/callback" % CALLBACK_PORT]})
+    pp = requests.post(reg_url,json = {"client_name":"lydia","redirect_uris":["http://localhost:%d/callback" % CALLBACK_PORT]},verify=SSL_VERIFY)
     resp = pp.json()
     if "client_id" in resp.keys():
       print("oauth: dynamic register successful, client_id '%s'" % resp["client_id"])
@@ -76,13 +77,15 @@ class OauthImpl:
     print(rsrc_metadata)
     print(auth_metadata)
     cv_raw = "".join(random.choices(string.ascii_letters + string.digits, k=8))
-    code_challenge = hashlib.sha256(cv_raw.encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(cv_raw.encode("ascii")).digest()
+    code_challenge = code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    # code_challenge = hashlib.sha256(cv_raw.encode("utf-8")).hexdigest()
     auth_endp = auth_metadata["authorization_endpoint"]
     token_endp = auth_metadata["token_endpoint"]
     mcp_scope="+".join(rsrc_metadata["scopes_supported"])
     print("")
-    print(cv_raw)
-    print(code_challenge)
+    # print(cv_raw)
+    # print(code_challenge)
     print("oauth: authenticate to:")
     print("%s?response_type=code&client_id=%s&redirect_uri=http://localhost:%d/callback&scope=%s&code_challenge=%s&code_challenge_method=S256" % (auth_endp,self.client_id,CALLBACK_PORT,mcp_scope,code_challenge))
     print("")
@@ -104,14 +107,20 @@ class OauthImpl:
       "code_verifier":cv_raw,
       "redirect_uri":"http://localhost:%d/callback" % CALLBACK_PORT
     }
-    print(payload)
+    # print(payload)
     # "redirect_uri":"http://localhost:%d/callback" % CALLBACK_PORT,
     pp = requests.post(token_endp,json=payload,verify=SSL_VERIFY)
     while pp.status_code == 202:
       print("Polling...")
       time.sleep(1.0)
       pp = requests.post(token_endp,json=payload,verify=SSL_VERIFY)
-    print(pp.json())
+    return pp.json()
+    # print(pp.json())
+
+  def get_auth_hdrs(self):
+    return {
+      "Authorization":"Bearer %s" % self.auth_data["access_token"]
+    }
 
   def __init__(self,auth_hdr,base_url):
     global SSL_VERIFY
@@ -140,5 +149,4 @@ class OauthImpl:
       self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"])
     else:
       self.client_id = input("oauth: enter client id > ").rstrip()
-    self.user_3lo_auth(resource_metadata,auth_metadata)
-    # sys.exit(0)
+    self.auth_data = self.user_3lo_auth(resource_metadata,auth_metadata)
