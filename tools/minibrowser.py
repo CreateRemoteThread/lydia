@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import random
 import requests
 import core.sandbox
 import core.config
@@ -11,9 +12,9 @@ def web_request(method: Annotated[str, "request method"], url: Annotated[str, "r
   global SSL_VERIFY
   print("info: web_request(method='%s',url='%s',data='%s') called" % (method,url,data))
   if len(data) == 0:
-    response = requests.request(method=method,url=url,verify=SSL_VERIFY)
+    response = requests.request(method=method,url=url,verify=SSL_VERIFY,trust_env=False)
   else:
-    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY)
+    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY, trust_env=False)
   status_line = f"HTTP/1.1 {response.status_code} {response.reason}" 
   headers = "\n".join(f"{key}: {value}" for key, value in response.headers.items())
   data = response.text
@@ -25,17 +26,21 @@ def web_download_file(method: Annotated[str, "request method"], url: Annotated[s
   print("info: web_download_file(method='%s',url='%s',data='%s',filename='%s') called" % (method,url,data,filename))
   global SSL_VERIFY
   if len(data) == 0:
-    response = requests.request(method=method,url=url,verify=SSL_VERIFY)
+    response = requests.request(method=method,url=url,verify=SSL_VERIFY,trust_env=False)
   else:
-    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY)
+    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY,trust_env=False)
   status_line = f"HTTP/1.1 {response.status_code} {response.reason}"
-  if core.sandbox.is_path_safe(filename) is False:
+  filename = core.sandbox.is_path_safe(filename)
+  if filename is False:
     return "error: filename path forbidden by sandbox"
+  while os.path.isfile(filename) is True:
+    print("warn: web_download_file attempting to overwrite")
+    filename = filename + ".%d" % random.randint(0,100)
   with open(filename,"wb") as f:
     f.write(response.content)
   # raw_http_response = f"{status_line}\n{headers}\n\n{data}"
   print("info: web request returning, status '%s'" % status_line)
   if response.status_code == 200:
-    return "ok"
+    return "ok, saved as '%s'" % filename
   else:
     return status_line

@@ -15,7 +15,8 @@ from pathlib import Path
 
 def file_rg(pattern: Annotated[str, "pattern to pass to search for with ripgrep."], location: Annotated[str, "location to search. use '.' for current directory"]):
   print("info: file_rg('%s','%s') called" % (pattern,location))
-  if core.sandbox.is_path_safe(location) is False:
+  location = core.sandbox.is_path_safe(location)
+  if location is False:
     return "error: location blocked by sandbox"
   result = subprocess.run(
     ["rg","--color=never" ,"\'%s\'" % pattern, "\'%s\'" % location],
@@ -34,7 +35,8 @@ def file_rg(pattern: Annotated[str, "pattern to pass to search for with ripgrep.
 
 def file_mkdir(dirname: Annotated[str, "Name of directory to create"]):
   realpath = expanduser(normpath(dirname))
-  if core.sandbox.is_path_safe(realpath) is False:
+  realpath = core.sandbox.is_path_safe(realpath)
+  if realpath is False:
     return "error: dirname blocked by sandbox"
   if os.path.isdir(realpath):
     return "error: directory already exists"
@@ -46,7 +48,8 @@ def file_mkdir(dirname: Annotated[str, "Name of directory to create"]):
 def file_read(filename: Annotated[str, "Name of the file to read"], start: Annotated[int, "Location to start reading from"], bytes: Annotated[int, "Number of bytes to read. Use -1 to read the whole file."]):
   global MAX_DATA
   print("info: file_read(%s,%d,%d) called" % (filename,start,bytes))
-  if core.sandbox.is_path_safe(filename) is False:
+  filename = core.sandbox.is_path_safe(filename)
+  if filename is False:
     return "error: filename blocked by sandbox"
   else:
     if os.path.isfile(filename) is False:
@@ -71,7 +74,8 @@ def file_write(filename: Annotated[str, "Name of the file to write to"], data: A
   global FILE_WRITE_PERMISSION
   print("info: file_write(%s,len(data)=%d) called" % (filename, len(data)))
   realpath = expanduser(normpath(filename))
-  if core.sandbox.is_path_safe(realpath) is False:
+  realpath = core.sandbox.is_path_safe(realpath)
+  if realpath is False:
     return "error: filename blocked by sandbox"
   mode = "w"
   if append is True:
@@ -82,7 +86,8 @@ def file_write(filename: Annotated[str, "Name of the file to write to"], data: A
 
 def file_glob(pattern: Annotated[str, "Pattern to glob"]):
   print("info: file_glob(%s) called" % pattern)
-  if core.sandbox.is_path_safe(pattern) is False:
+  pattern = core.sandbox.is_path_safe(pattern)
+  if pattern is False:
     return "error: pattern blocked by sandbox"
   data = glob.glob(pattern)
   if len(data) == 0:

@@ -28,7 +28,7 @@ def is_path_safe(test_path):
     try:
       path1.relative_to(path_parent)
       print("sbx: '%s' is subdir of '%s', ok" % (test_path,sbx_path))
-      return True
+      return str(path1)
     except ValueError as e:
       continue
   return False
@@ -37,7 +37,7 @@ if __name__ == "__main__":
   print("tester")
   while True:
     testpath = input( " > ").strip()
-    if is_path_safe(testpath):
+    if is_path_safe(testpath) is not False:
       print("OK")
     else:
       print("NO")

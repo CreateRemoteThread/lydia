@@ -32,6 +32,7 @@ class Baneling:
     self.tool_func = self.toolbox.fetch(tool_name)
     self.tool_args = tool_args
     self.next = None
+    self.defaultnext = None
     self.save_output = None
     self.write_output = None
 
@@ -47,7 +48,7 @@ class Drone:
 
 def make_drone_class(agent_class):
   class Drone_Class(agent_class):
-    def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,model=None,base_url=None,parent_hatchery=None,mcps=[],pytools=[]):
+    def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,defaultnext=None,model=None,base_url=None,parent_hatchery=None,mcps=[],pytools=[]):
       print("drone: initializing drone '%s'" % node_name)
       self.mcp_loader = core.mcp.MCPLoader()
       self.toolbox = tools.ToolLoader(Hatchery)
@@ -58,6 +59,7 @@ def make_drone_class(agent_class):
       self.name = node_name
       self.usr_prompt = usr_prompt
       self.next = next
+      self.defaultnext = defaultnext
       self.avail_tools = []
       self.save_output = None
       self.write_output = None
@@ -135,7 +137,7 @@ class Hatchery:
         tools  = node.get("tools",[])
         pytools = node.get("pytools",[])
         mcps  = node.get("mcp",[])
-        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps,pytools=pytools)
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),defaultnext=node.get("defaultnext",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps,pytools=pytools)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
       elif node_type == "tool":
@@ -146,6 +148,7 @@ class Hatchery:
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
         self.nodes[node_name].next = node.get("next",None)
+        self.nodes[node_name].defaultnext = node.get("defaultnext",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
 
   def run(self,ctx=None,startNode=None):
@@ -182,7 +185,6 @@ class Hatchery:
         print(output)
         break
       elif isinstance(drone.next,list):
-        # select one only.
         if len(drone.next) == 0:
           print("fatal: drone '%s' has an empty nextlist")
           sys.exit(-1)
@@ -190,12 +192,18 @@ class Hatchery:
           print("hatchery: drone '%s' nextlist contains one item, routing to '%s'" % (drone.name,drone.next[0]))
           drone = self.nodes[drone.next[0]]
           continue
+        nextSelected = False
         for i in drone.next[:-1]:
-          if i in output:
+          if i in output and i in self.nodes.keys():
             print("hatchery: passing from '%s' to '%s'" % (drone.name,i))
             drone = self.nodes[i]
-        print("hatchery: passing from '%s' to default route '%s'" % (drone.name,drone.next[-1]))
-        drone = self.nodes[drone.next[-1]]
+            nextSelected = True
+        if nextSelected is False:
+          print("hatchery: passing to default next '%s'" % drone.defaultnext)
+          if drone.defaultnext not in self.nodes.keys():
+            print("hatchery: attempting an invalid pass to nonexistent node '%s'" % drone.defaultnext)
+            sys.exit(0)  
+          drone = self.nodes[drone.defaultnext]
         continue
       else:
         print("hatchery: passing from '%s' to '%s'" % (drone.name, drone.next))

@@ -228,6 +228,7 @@ class MCPHandlerStdio:
 class MCPLoader:
   def __init__(self):
     self.mcplist = []
+    self.tool_names = []
 
   def deny_tool(self,toolname):
     print("mcp: denying tool '%s'" % toolname)
@@ -239,16 +240,22 @@ class MCPLoader:
   def load_mcp(self,mcpname):
     if mcpname.startswith("http"):
       print("mcp: loading http '%s'" % mcpname)
-      self.mcplist.append(MCPHandlerHttp(mcpname))
+      mcp = MCPHandlerHttp(mcpname)
     elif mcpname.startswith("sse+"):
       print("mcp: loading sse http '%s'" % mcpname)
-      self.mcplist.append(MCPHandlerSSE(mcpname[4:]))
+      mcp = MCPHandlerSSE(mcpname[4:])
     elif mcpname.startswith("3lo+"):
       print("mcp: loading 3lo http '%s'" % mcpname)
-      self.mcplist.append(MCPHandler3LO(mcpname[4:]))
+      mcp = MCPHandler3LO(mcpname[4:])
     else:
       print("mcp: loading stdio '%s'" % mcpname)
-      self.mcplist.append(MCPHandlerStdio(mcpname))
+      mcp = MCPHandlerStdio(mcpname)
+    for t in mcp.tool_names: # dirty hack while i think about namespaces
+      if t in self.tool_names:
+        print("mcp: conflicting tool name '%s'" % t)
+        sys.exit(0)
+        break
+    self.mcplist.append(mcp)
 
   def get_json(self):
     t = []
