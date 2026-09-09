@@ -16,7 +16,13 @@ def is_path_safe(test_path):
   if "$" in test_path:
     print("sbx: is_path_safe('%s'), rejecting because of '$'" % test_path)
     return False
-  path1 = Path(os.path.expanduser(test_path)).resolve()
+  try:
+    p = Path(os.path.expanduser(test_path))
+    path1 = p.resolve()
+  except:
+    print("sbx: is_path_safe('%s'), rejecting because Path cast failed")
+    return False
+  # path1 = Path(os.path.expanduser(test_path)).resolve()
   for sbx_path in sandbox_paths:
     path_parent = Path(sbx_path).resolve()
     try:

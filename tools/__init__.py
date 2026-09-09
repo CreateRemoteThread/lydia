@@ -6,7 +6,6 @@ import tools.minibrowser
 import tools.term
 import tools.chrome
 import tools.debug
-import tools.r2tool
 import tools.memory
 import inspect
 
@@ -69,9 +68,6 @@ class ToolLoader:
     self.registerFunction("term_kill",term.term_kill, "Terminate the interactive process.")
     self.registerFunction("chrome_debug",chrome.devtools, "Send a request to a Chrome DevTools server at http://localhost:9222/ .")
     self.registerFunction("debug_print",debug.debug_print, "Print a debugging message.")
-    self.registerFunction("r2_open",r2tool.r2_open, "Open a file in r2.")
-    self.registerFunction("r2_cmd",r2tool.r2_cmd, "Run an r2 command.")
-    self.registerFunction("r2_close",r2tool.r2_close, "Close the r2 session.")
     self.registerFunction("mem_store",memory.store, "Store a fact to persistent memory.")
     self.registerFunction("mem_fetch",memory.fetch, "Retrieve facts from persistent memory based on a keyword.")
 

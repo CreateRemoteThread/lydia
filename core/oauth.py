@@ -61,10 +61,10 @@ class OauthCatcher:
 SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
 
 class OauthImpl:
-  def dynamic_register_client(self,reg_url):
+  def dynamic_register_client(self,reg_url,resource_url):
     global CALLBACK_PORT, SSL_VERIFY
     print("oauth: attempting dynamic client registration as 'lydia'")
-    pp = requests.post(reg_url,json = {"client_name":"lydia","redirect_uris":["http://localhost:%d/callback" % CALLBACK_PORT]},verify=SSL_VERIFY)
+    pp = requests.post(reg_url,json = {"client_name":"lydia","redirect_uris":["http://localhost:%d/callback" % CALLBACK_PORT],"resource":resource_url},verify=SSL_VERIFY)
     resp = pp.json()
     if "client_id" in resp.keys():
       print("oauth: dynamic register successful, client_id '%s'" % resp["client_id"])
@@ -72,10 +72,10 @@ class OauthImpl:
     else:
       return input("oauth: dynamic client register failed, enter client_id > ").rstrip()
 
-  def user_3lo_auth(self,rsrc_metadata,auth_metadata):
+  def user_3lo_auth(self,rsrc_metadata,auth_metadata,resource_url):
     global CALLBACK_PORT, CALLBACK_CODE
-    print(rsrc_metadata)
-    print(auth_metadata)
+    # print(rsrc_metadata)
+    # print(auth_metadata)
     cv_raw = "".join(random.choices(string.ascii_letters + string.digits, k=8))
     digest = hashlib.sha256(cv_raw.encode("ascii")).digest()
     code_challenge = code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
@@ -84,10 +84,8 @@ class OauthImpl:
     token_endp = auth_metadata["token_endpoint"]
     mcp_scope="+".join(rsrc_metadata["scopes_supported"])
     print("")
-    # print(cv_raw)
-    # print(code_challenge)
     print("oauth: authenticate to:")
-    print("%s?response_type=code&client_id=%s&redirect_uri=http://localhost:%d/callback&scope=%s&code_challenge=%s&code_challenge_method=S256" % (auth_endp,self.client_id,CALLBACK_PORT,mcp_scope,code_challenge))
+    print("%s?response_type=code&client_id=%s&redirect_uri=http://localhost:%d/callback&scope=%s&code_challenge=%s&code_challenge_method=S256&resource=%s" % (auth_endp,self.client_id,CALLBACK_PORT,mcp_scope,code_challenge,resource_url))
     print("")
     server = OauthCatcher(host="localhost",port=CALLBACK_PORT)
     server.start()
@@ -134,7 +132,10 @@ class OauthImpl:
     rm_url = match.group(1)
     pp = requests.get(rm_url,verify=SSL_VERIFY)
     resource_metadata = pp.json()
-    # print(resource_metadata)
+    resource_url = resource_metadata["resource"]
+    if resource_url != base_url:
+      print("oauth: resource_metadata['resource'] did not match sourceurl")
+      sys.exit(0)
     auth_url = random.choice(resource_metadata["authorization_servers"])
     print("oauth: selected '%s' auth server" % auth_url)
     pp = requests.get("/".join([auth_url,".well-known/oauth-authorization-server"]),verify=SSL_VERIFY)
@@ -146,7 +147,7 @@ class OauthImpl:
       pp = requests.get(auth_discov,verify=SSL_VERIFY)
     auth_metadata = pp.json()
     if "registration_endpoint" in auth_metadata.keys():
-      self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"])
+      self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
     else:
       self.client_id = input("oauth: enter client id > ").rstrip()
-    self.auth_data = self.user_3lo_auth(resource_metadata,auth_metadata)
+    self.auth_data = self.user_3lo_auth(resource_metadata,auth_metadata,resource_url)
