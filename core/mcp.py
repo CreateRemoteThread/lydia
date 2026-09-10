@@ -255,6 +255,8 @@ class MCPLoader:
         print("mcp: conflicting tool name '%s'" % t)
         sys.exit(0)
         break
+      else:
+        self.tool_names.append(t)
     self.mcplist.append(mcp)
 
   def get_json(self):

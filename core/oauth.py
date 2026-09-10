@@ -146,6 +146,9 @@ class OauthImpl:
         sys.exit(0)
       pp = requests.get(auth_discov,verify=SSL_VERIFY)
     auth_metadata = pp.json()
+    if auth_metadata["issuer"] != auth_url:
+      print("oauth: auth_metadata issuer does not match auth_url")
+      sys.exit(0)
     if "registration_endpoint" in auth_metadata.keys():
       self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
     else:
