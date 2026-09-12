@@ -229,6 +229,7 @@ class MCPLoader:
   def __init__(self):
     self.mcplist = []
     self.tool_names = []
+    self.mcp_alias_table = None
 
   def deny_tool(self,toolname):
     print("mcp: denying tool '%s'" % toolname)
@@ -237,7 +238,14 @@ class MCPLoader:
       mcpserver.tools_json = [item for item in mcpserver.tools_json if item.get("name") != toolname]
       mcpserver.tool_names = [item for item in mcpserver.tool_names if item != toolname]
 
-  def load_mcp(self,mcpname):
+  def load_mcp(self,mcpname_):
+    if self.mcp_alias_table is None:
+      self.mcp_alias_table = core.config.getenv("MCP_ALIAS",{})
+    if mcpname_ in self.mcp_alias_table.keys():
+      mcpname = self.mcp_alias_table[mcpname_]
+      print("mcp: using '%s' for alias '%s'" % (mcpname,mcpname_))
+    else:
+      mcpname = mcpname_
     if mcpname.startswith("http"):
       print("mcp: loading http '%s'" % mcpname)
       mcp = MCPHandlerHttp(mcpname)
