@@ -190,7 +190,11 @@ class MCPHandlerStdio:
   def fn_call(self,name,params):
     # print("mcp: fn_call hit inside mcp handler")
     r = self.send_request("tools/call",{"name":name,"arguments":params})
-    cont = r.get("content")
+    try:
+      cont = r.get("content")
+    except:
+      return "mcp: fn_call returned something odd"
+      print(r)
     if len(cont) == 1 and cont[0]["type"] == "text":
       return cont[0]["text"]
     else:

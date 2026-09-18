@@ -226,6 +226,7 @@ class Agent:
         print("info: flushing assistant message from queue to input obj...")
         self.req["messages"].append(a)
       self.asst_msg_queue = []
+    core.memory.memory_fade(self.req["messages"]) 
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
         return RETN_DATA
@@ -238,7 +239,7 @@ class Agent:
         send_user_input_once = False
       else:
         resp = self.req_single(None)
-      core.memory.memory_fade(self.req["messages"])
+      core.memory.memory_fade_gradual(self.req["messages"])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))

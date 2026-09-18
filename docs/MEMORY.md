@@ -1,20 +1,8 @@
 # Lydia - Memory Handling
 
-The primary consumer of tokens is memory - old tool calls, old outputs, admin fluff. Lydia handles this by assigning tool calls a configurable MEMORY_DECAY env var (defaulting to 6). This is implemented in core.memory.
+### Introduction
 
-The effect is:
-- Tool calls which are over MEMORY_DECAY turns will vanish out of memory.
-- While the history is longer than 3 * MEMORY_DECAY:
-  - Delete the first turn after the system prompt (both query and response)
-- The second behaviour can be disabled with CONSECRATE_MEMORY=adsf
+The greatest contributor to excess token usage is maintaining memory and tool calls across long-horizon tasks (also, "wasted" MCP calls). Lydia attempts to address this by two architectural decisions - that each "message" should be independent of previous context
 
-Consider raising MEMORY_DECAY for tasks which require more information, but may not require tool calls.
+Two changes are made to fix this:
 
-The following commands can interact with memory while in interactive (-i) mode:
-
-```
-- !reset: flush memory completely, waiting for next user input
-- !stats: check the size of memory
-- !save <filename>: save context to file as JSON
-- !load <filename>: load JSON-dumped context from file
-```

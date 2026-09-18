@@ -205,6 +205,7 @@ class Agent:
         print("info: flushing assistant message from queue to input obj...")
         self.req["input"].append(a)
       self.asst_msg_queue = []
+    core.memory.memory_fade(self.req["input"])
     while True:
       if RETN_DATA is not None and RETN_TOOL is False:
         return RETN_DATA
@@ -217,7 +218,7 @@ class Agent:
         send_user_input_once = False
       else:
         resp = self.req_single(None)
-      core.memory.memory_fade(self.req["input"])
+      core.memory.memory_fade_gradual(self.req["input"])
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
@@ -238,7 +239,12 @@ class Agent:
           RETN_TOOL = True
           fn_obj = None
           fn_name = resp_obj["name"]
-          fn_args = json.loads(resp_obj["arguments"])
+          try:
+            fn_args = json.loads(resp_obj["arguments"])
+          except:
+            print("agent: error laoding argument")
+            print(resp_obj)
+            sys.exit(0)
           for i in self.tools:
             if i.__name__ == fn_name:
               fn_obj = i

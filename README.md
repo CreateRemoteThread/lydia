@@ -28,9 +28,8 @@ You can set the following environment variables (note that these are overridden 
 ```
 - SSL_VERIFY (set to anything but "True" to disable requests ssl verification)
 - STFU (set to anything to remove the ask_user tool from default context)
-- MEMORY_DECAY (sets how aggressively memory decays. lower number = shorter memory)
+- TURNS_KEPT (configure how long to keep memory, default 6 turns)
 - MCP_CREDFILE (points to comma separated list of url,bearer token)
-- CONSECRATE_MEMORY (set this to disable purging memory. tool calls are still purged)
 - CMD_FW (comma-separated allowed commands for shell_ tools)
 - OPENAI_BASE_URL
 - OPENAI_API_KEY

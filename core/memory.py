@@ -8,7 +8,7 @@ import string
 import core.config
 
 MEMORY_FADE = {}
-MEMORY_DECAY = None
+TURNS_KEPT = None
 
 def try_get_callid(evt):
   if "call_id" in evt.keys():    # openai / responses
@@ -23,38 +23,37 @@ def try_get_callid(evt):
   else:
     return None
 
-# called every 'turn' to flush old tool calls from memory.
 def memory_fade(input_array):
-  global MEMORY_FADE, MEMORY_DECAY
+  pass
+  # while len(input_array) != 0:
+  #   del(input_array[0])  
+
+def memory_fade_gradual(input_array):
+  global MEMORY_FADE, TURNS_KEPT
   memories_purged = 0
-  if MEMORY_DECAY is None:
-    MEMORY_DECAY = core.config.getenv("MEMORY_DECAY",default="6")
-    MEMORY_DECAY = int(MEMORY_DECAY)
-  if MEMORY_DECAY != -1:
-    for evt in input_array:
+  if TURNS_KEPT is None:
+    TURNS_KEPT = core.config.getenv("TURNS_KEPT",default="6")
+    TURNS_KEPT = int(TURNS_KEPT)
+  if TURNS_KEPT != -1:
+    del_hdr = 0
+    while del_hdr < len(input_array):
+      evt = input_array[del_hdr]
       call_id = try_get_callid(evt)
       if call_id is not None:
         if call_id not in MEMORY_FADE.keys():
-          # print("mem: adding new memory: '%s'" % call_id)
-          MEMORY_FADE[call_id] = MEMORY_DECAY
+          MEMORY_FADE[call_id] = TURNS_KEPT
         else:
-          if MEMORY_FADE[call_id] == 0:
-            # print("mem: purging call '%s' from context" % call_id)
-            del(evt)
+          if MEMORY_FADE[call_id] == 1:
+            del(MEMORY_FADE[call_id])
+            del(input_array[del_hdr])
             continue
           else:
             MEMORY_FADE[call_id] -= 1
-    # cannot pass by ref (cannot modify list while it's being checked)
-    fl = [x for x in MEMORY_FADE.keys()]
-    memories_purged = 0
-    for i in fl:
-      if MEMORY_FADE[i] == 0:
-        memories_purged += 1
-        del(MEMORY_FADE[i])
+      del_hdr += 1
   else:
     print("mem: memory_decay is -1, preserving tool calls")
-  if core.config.getenv("CONSECRATE_MEMORY",None) is None and MEMORY_DECAY != -1:
-    while len(input_array) > 3 * MEMORY_DECAY:
+  if TURNS_KEPT != -1:
+    while len(input_array) > 2 * (TURNS_KEPT + 1):
       print("mem: deleting turn")
       del(input_array[1])
       del(input_array[1])
@@ -62,7 +61,6 @@ def memory_fade(input_array):
     print("mem: consecrated memory active, disabling amnesia")
   if memories_purged != 0:
     print("mem: purged %d memories from context" % memories_purged)
-  
 
 def do_save(input_arr,filename):
   try:

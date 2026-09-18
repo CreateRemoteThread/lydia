@@ -23,5 +23,5 @@ Some of the initial challenges are:
   - Watch for perm_lock problems: delete *only* perm_lock. If you delete perm, replace it with an empty file.
 - The LLM has no idea how to actually play, sending inputs like "left" and "l" when trying to go left. Write a prompt for what to do.
   - The LLM has no idea what things on the screen mean, or how to move to relative positions (e.g. "move to the { symbol" may go somewhere unexpected).
-- The context required by screenshots is relatively large. We need to aggressively prune screen scrapes (MEMORY_DECAY=3?), or foot the bill.
+- The context required by screenshots is relatively large. We need to aggressively prune screen scrapes (TURNS_KEPT=3?), or foot the bill.
 ```
