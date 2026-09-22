@@ -35,6 +35,7 @@ You can set the following environment variables (note that these are overridden 
 - OPENAI_API_KEY
 - OPENAI_DEFAULT_MODEL
 - DEBUG_REQUESTS (set to any value to enable dumping requests)
+- DEBUG_MEMORY (set to any value to enable debugging memory)
 - X_PORTKEY_PROVIDER (if you're using portkey)
 - FN_PREFIX
   - The "file sandbox" is this env var (comma-separated) + /tmp, /var/tmp, /private/tmp + current directory.

@@ -25,12 +25,21 @@ def try_get_callid(evt):
 
 def memory_fade(input_array):
   pass
-  # while len(input_array) != 0:
-  #   del(input_array[0])  
+
+def debug_memory_state(input_array):
+  global MEMORY_FADE
+  for i in range(0,len(input_array)):
+    evt = input_array[i]
+    if try_get_callid(evt) is not None:
+      print("mem:dbg: item %d tool_call %s" % (i,try_get_callid(evt)))
+    else:
+      print("mem:dbg: item %d message" % i)
 
 def memory_fade_gradual(input_array):
   global MEMORY_FADE, TURNS_KEPT
   memories_purged = 0
+  tools_purged = 0
+  # print("mem_input: %d" % len(input_array))
   if TURNS_KEPT is None:
     TURNS_KEPT = core.config.getenv("TURNS_KEPT",default="6")
     TURNS_KEPT = int(TURNS_KEPT)
@@ -41,26 +50,40 @@ def memory_fade_gradual(input_array):
       call_id = try_get_callid(evt)
       if call_id is not None:
         if call_id not in MEMORY_FADE.keys():
-          MEMORY_FADE[call_id] = TURNS_KEPT
+          # print("mem: adding %s" % call_id)
+          MEMORY_FADE[call_id] = TURNS_KEPT + 1
         else:
-          if MEMORY_FADE[call_id] == 1:
-            del(MEMORY_FADE[call_id])
+          # print("del_hdr is %d, fade ctr is %d" % (del_hdr,MEMORY_FADE[call_id]))
+          if MEMORY_FADE[call_id] <= 0:
+            print("mem: deleting call %s from input_array" % call_id)
             del(input_array[del_hdr])
             continue
           else:
             MEMORY_FADE[call_id] -= 1
       del_hdr += 1
+    mfk = list(MEMORY_FADE.keys())
+    for call_id in mfk:
+      if MEMORY_FADE[call_id] < 0:
+        print("mem: purging %s" % call_id)
+        del(MEMORY_FADE[call_id])
+        tools_purged += 1
   else:
-    print("mem: memory_decay is -1, preserving tool calls")
+    print("mem: memory consecrated, preserving tool calls")
   if TURNS_KEPT != -1:
     while len(input_array) > 2 * (TURNS_KEPT + 1):
-      print("mem: deleting turn")
-      del(input_array[1])
-      del(input_array[1])
+      if try_get_callid(input_array[0]) is None and try_get_callid(input_array[1]) is None:
+        del(input_array[0])
+        del(input_array[0])
+        memories_purged += 1
+      else:
+        print("mem: tool call in first turn, this should not occur")
+        break
   else:
-    print("mem: consecrated memory active, disabling amnesia")
+    print("mem: memory consecrated, disabling amnesia")
+  if core.config.getenv("DEBUG_MEMORY",default="False") != "False":
+    debug_memory_state(input_array)
   if memories_purged != 0:
-    print("mem: purged %d memories from context" % memories_purged)
+    print("mem: purged %d memories, %d fncalls from context" % (memories_purged,tools_purged))
 
 def do_save(input_arr,filename):
   try:

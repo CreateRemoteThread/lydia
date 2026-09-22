@@ -240,6 +240,7 @@ class Agent:
       else:
         resp = self.req_single(None)
       core.memory.memory_fade_gradual(self.req["messages"])
+      # print(len(self.req["messages"]))
       if DEBUG_REQUESTS:
         print("<<<" * 10)
         print(json.dumps(resp.json(),indent=2))
