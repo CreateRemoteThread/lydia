@@ -19,7 +19,7 @@ def file_rg(pattern: Annotated[str, "pattern to pass to search for with ripgrep.
   if location is False:
     return "error: location blocked by sandbox"
   result = subprocess.run(
-    ["rg","--color=never" ,"\'%s\'" % pattern, "\'%s\'" % location],
+    ["rg","--color=never" ,"-e",pattern,"--",location],
     capture_output=True,
     text=True,
     encoding="utf-8",

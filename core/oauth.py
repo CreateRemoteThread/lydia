@@ -74,8 +74,6 @@ class OauthImpl:
 
   def user_3lo_auth(self,rsrc_metadata,auth_metadata,resource_url):
     global CALLBACK_PORT, CALLBACK_CODE
-    # print(rsrc_metadata)
-    # print(auth_metadata)
     cv_raw = "".join(random.choices(string.ascii_letters + string.digits, k=8))
     digest = hashlib.sha256(cv_raw.encode("ascii")).digest()
     code_challenge = code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
