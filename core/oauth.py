@@ -81,6 +81,11 @@ class OauthImpl:
     auth_endp = auth_metadata["authorization_endpoint"]
     token_endp = auth_metadata["token_endpoint"]
     mcp_scope="+".join(rsrc_metadata["scopes_supported"])
+    if self.mcp_client_data is not None:
+      try:
+        mcp_scope = self.mcp_client_data["mcp_scopes"]
+      except:
+        print("oauth: could not load mcp_scopes from MCP_CLIENT_DATA")
     print("")
     print("oauth: authenticate to:")
     print("%s?response_type=code&client_id=%s&redirect_uri=http://localhost:%d/callback&scope=%s&code_challenge=%s&code_challenge_method=S256&resource=%s" % (auth_endp,self.client_id,CALLBACK_PORT,mcp_scope,code_challenge,resource_url))
@@ -103,6 +108,11 @@ class OauthImpl:
       "code_verifier":cv_raw,
       "redirect_uri":"http://localhost:%d/callback" % CALLBACK_PORT
     }
+    if self.mcp_client_data is not None:
+      try:
+        payload["client_secret"] = self.mcp_client_data["client_secret"]
+      except:
+        print("oauth: could not load client_secret from MCP_CLIENT_DATA")
     # print(payload)
     # "redirect_uri":"http://localhost:%d/callback" % CALLBACK_PORT,
     pp = requests.post(token_endp,json=payload,verify=SSL_VERIFY)
@@ -147,7 +157,15 @@ class OauthImpl:
     if auth_metadata["issuer"] != auth_url:
       print("oauth: auth_metadata issuer does not match auth_url")
       sys.exit(0)
-    if "registration_endpoint" in auth_metadata.keys():
+    self.mcp_client_data = core.config.getsubvar("MCP_CLIENT_DATA",base_url,None)
+    if self.mcp_client_data is not None:
+      print("oauth: using pre-registered client")
+      try:
+        self.client_id = self.mcp_client_data["client_id"]
+      except:
+        print("oauth: cannot load client_id from MCP_CLIENT_DATA")
+        self.client_id = input("oauth: enter client id > ").rstrip()
+    elif "registration_endpoint" in auth_metadata.keys():
       self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
     else:
       self.client_id = input("oauth: enter client id > ").rstrip()
