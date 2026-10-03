@@ -1,6 +1,25 @@
 # Lydia - Safety Mechanisms
 
-### Problem
+### Part 1 - File Safety
+File safety mechanisms are implemented on the file_* tools, implemented in core/sandbox. This attempts to limit file accesses to temporary paths, and the current working directory (and subdirectories).
+
+The following steps are undertaken, when a file access is performed:
+
+- core/sandbox/is_path_safe is called
+- on the first time:
+  - user is prompted to approve trusting the current path
+  - special permission needs to be provided if curpath = homedir
+- check if the path is within:
+  - curpath
+  - /var/tmp
+  - /tmp
+  - within FN_SANDBOX (csv separated path list)
+
+If FN_SANDBOX explicitly includes ~, this is accpted as-is (i.e. the user has set this intentionally, so there is no further check).
+
+Other file accesses, via the file_ tools, are rejected. No sandbox is applied to subprocesses or MCP's, because they don't use file_ tools.
+
+### Part 2 - Command Safety
 Often, LLM's will go way off track and run whatever commands they want, including wildly unconstrained stuff like 'bash'. There is no way to fundamentally solve this problem, but measures are in place to prevent the dumbest violations.
 
 To whitelist a set of commands and run them locally, do this:
