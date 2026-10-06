@@ -56,7 +56,11 @@ def cmdfw(command):
       if x != "yes":
         print("fatal: YELLOW_BRICK_ROAD confirmation denied by user")
         sys.exit(-1)
+  print("=" * 80)
+  print("")
   print("fw: firewalling '%s'" % command)
+  print("")
+  print("=" * 80)
   if YELLOW_BRICK_ROAD == "ISO31000":
     print("fw: YELLOW_BRICK_ROAD mode, allowing command")
     return True
