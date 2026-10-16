@@ -1,0 +1,42 @@
+{
+  "servers": [
+    "r2pm -r r2mcp"
+  ],
+  "tools": [
+    {
+      "name": "open_file",
+      "description": "Opens a binary file with radare2 for analysis <think>Call this tool before any other one from r2mcp. Use an absolute file_path</think>",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Path to the file to open"
+          },
+          "baddr": {
+            "type": "string",
+            "description": "Optional base address for PIE binaries, same as radare2 -B / -m (for example 0x400000). For raw/headerless files (no ELF/PE magic), this now also creates an explicit io map so the file's content actually appears at this address, matching radare2 CLI's -m behavior"
+          },
+          "arch": {
+            "type": "string",
+            "description": "Optional asm.arch override (eg. 'arm'), same as radare2 -a. Needed for raw/headerless binaries which cannot be autodetected and would otherwise default to the host arch"
+          },
+          "bits": {
+            "type": "string",
+            "description": "Optional asm.bits override (eg. 16 for ARM Thumb), same as radare2 -b"
+          },
+          "cpu": {
+            "type": "string",
+            "description": "Optional asm.cpu override (eg. 'cortex'), same as radare2 -k/-e asm.cpu"
+          }
+        },
+        "required": [
+          "file_path"
+        ]
+      },
+      "type": "function"
+    }
+  ],
+  "prehooks":{"open_file":"None"},
+  "posthooks":{}
+}

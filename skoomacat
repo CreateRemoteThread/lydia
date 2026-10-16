@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+
+import json
+import os
+import core.config
+import core.mcp
+import core.server
+from http.server import ThreadingHTTPServer
+import sys
+import getopt
+from enum import Enum
+
+class Mode(Enum):
+  JSON_LOAD=0
+  JSON_SAVE=1
+
+def usage():
+  print("--mcp [mcp_string]: loads an mcp. can call repeatedly")
+
+if __name__ == "__main__":
+  print("skoomacat: m'aiq knows much, and tells some")
+  if len(sys.argv) == 1:
+    usage()
+    sys.exit(0)
+  CFG_MCP_LOAD = []
+  CFG_MODE = None
+  CFG_JSON_OUT = None
+  CFG_JSON_IN = None
+  if len(sys.argv) == 2:
+    CFG_JSON_IN = sys.argv[1]
+    CFG_MODE = Mode.JSON_LOAD
+  else:
+    core.config.defaultcfg()
+    opts, leftover = getopt.getopt(sys.argv[1:],"",["mcp="])
+    if len(leftover) != 1:
+      print("skoomacat: --mcp --mcp --mcp [out.json]")
+      sys.exit(0)
+    CFG_MODE = Mode.JSON_SAVE
+    CFG_JSON_OUT = leftover[0]
+    for arg, val in opts:
+      if arg == "--mcp":
+        CFG_MCP_LOAD.append(val)
+  if CFG_MODE == Mode.JSON_LOAD:
+    MCPLoader = core.mcp.MCPLoader()
+    with open(CFG_JSON_IN,"r") as f:
+      cfg_top = json.loads(f.read())
+    serverlist = cfg_top["servers"]
+    tools_json = cfg_top["tools"]
+    tools_prehooks = cfg_top["prehooks"]
+    tools_posthooks = cfg_top["posthooks"]
+    for mcp_server in serverlist:
+      MCPLoader.load_mcp(mcp_server)
+    MCPLoader.replace_inventory(tools_json)
+    MCPLoader.install_prehooks(tools_prehooks)
+    MCPLoader.install_posthooks(tools_posthooks)
+    host = "127.0.0.1"
+    port = 8000
+    core.server.setMcpLoader(MCPLoader)
+    print("skoomacat: m'aiq knows many things others do not (%s:%d)" % (host,port))
+    httpd = ThreadingHTTPServer((host, port), core.server.MCPHandler)
+    httpd.serve_forever()
+  elif CFG_MODE == Mode.JSON_SAVE:
+    MCPLoader = core.mcp.MCPLoader()
+    for mcp_server in CFG_MCP_LOAD:
+      MCPLoader.load_mcp(mcp_server)
+    payload = {}
+    payload["servers"] = CFG_MCP_LOAD
+    payload["tools"] = MCPLoader.get_json()
+    payload["prehooks"] = MCPLoader.get_json()
+    payload["posthooks"] = MCPLoader.get_json()
+    with open(CFG_JSON_OUT,"w") as f:
+      f.write(json.dumps(payload,indent=2))
+    print("skoomacat: m'aiq knows many things others do not (%s)" % CFG_JSON_OUT)

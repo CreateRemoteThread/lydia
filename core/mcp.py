@@ -61,7 +61,8 @@ class MCPHandlerHttp:
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
       self.tool_names.append(i.get("name"))
-      i["parameters"] = i.pop("inputSchema") # do this once, here, at loading. 
+      if "inputSchema" in i.keys():
+        i["parameters"] = i.pop("inputSchema") # do this once, here, at loading. 
       if "icons" in i.keys():
         # print("mcp: tokenmaxer scum detected. removing icons")
         i.pop("icons")
@@ -190,11 +191,11 @@ class MCPHandlerStdio:
   def fn_call(self,name,params):
     # print("mcp: fn_call hit inside mcp handler")
     r = self.send_request("tools/call",{"name":name,"arguments":params})
+    # print(json.dumps({"name":name,"arguments":params},indent=2))
     try:
       cont = r.get("content")
     except:
       return "mcp: fn_call returned something odd"
-      print(r)
     if len(cont) == 1 and cont[0]["type"] == "text":
       return cont[0]["text"]
     else:
@@ -227,13 +228,28 @@ class MCPHandlerStdio:
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
       self.tool_names.append(i.get("name"))
-      i["parameters"] = i.pop("inputSchema") # do this once, here, at loading.
+      if "inputSchema" in i.keys():
+        i["parameters"] = i.pop("inputSchema") # do this once, here, at loading.
 
 class MCPLoader:
   def __init__(self):
     self.mcplist = []
     self.tool_names = []
     self.mcp_alias_table = None
+    self.tool_json = None
+    self.prehooks = {}
+    self.posthooks = {}
+
+  def install_prehooks(self,prehooks_json):
+    self.prehooks = prehooks_json
+    pass
+
+  def install_posthooks(self,posthooks_json):
+    self.posthooks = posthooks_json
+    pass
+
+  def replace_inventory(self,new_json):
+    self.tool_json = new_json
 
   def deny_tool(self,toolname):
     print("mcp: denying tool '%s'" % toolname)
@@ -272,6 +288,8 @@ class MCPLoader:
     self.mcplist.append(mcp)
 
   def get_json(self):
+    if self.tool_json is not None:
+      return self.tool_json
     t = []
     for mcp in self.mcplist:
       t += mcp.tools_json 
@@ -284,7 +302,18 @@ class MCPLoader:
     for mcp in self.mcplist:
       if fn_name in mcp.tool_names:
         print("mcp: found server hosting '%s'" % fn_name)
-        return mcp.fn_call(fn_name,fn_args)
+        if fn_name in self.prehooks.keys():
+          print("mcp: evaluating prehook")
+          fn_args = eval(self.prehooks[fn_name],locals=[fn_args])
+          if fn_args is None:
+            return "mcp: blocked by user-defined prehook"
+          elif isinstance(fn_args,string) is True:
+            return fn_args
+        result = mcp.fn_call(fn_name,fn_args)
+        if fn_name in self.posthooks.keys():
+          print("mcp: evaluating posthook")
+          result = eval(self.posthooks[fn_name],locals=[result])
+        return result
         break
     print("mcp: could not find '%s'" % fn_name)
     return None
