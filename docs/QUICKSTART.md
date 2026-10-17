@@ -30,3 +30,4 @@ DEBUG_REQUESTS=1 ./lydia -p hi
 
 You should see the full JSON requests dumped, and the text generation result of the request "hi".
 
+You can copy "defaults.cfg" into ~/.lydia/defaults.cfg to set some sane default configurations for daily use.

@@ -13,8 +13,76 @@ import copy
 import random
 import core.config
 import core.oauth
+import inspect
+from typing import Annotated, get_args, get_origin
 
 SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
+class Namespace:
+  pass
+
+def fn_to_tool_json(fn,tag=None):
+    """
+    Convert an annotated Python function into an OpenAI Responses API tool schema.
+    """
+    sig = inspect.signature(fn)
+
+    properties = {}
+    required = []
+
+    type_map = {
+        str: "string",
+        int: "integer",
+        float: "number",
+        bool: "boolean",
+        list: "array",
+        dict: "object",
+    }
+
+    SKIP_FIRST = False
+    # arglist = sig.parameters.items()
+    # if tag is not None:
+    #   arglist = arglist[1:]
+    for name, param in sig.parameters.items():
+      if tag is not None and SKIP_FIRST is False:
+        SKIP_FIRST = True
+        continue
+      annotation = param.annotation
+      description = ""
+      py_type = str
+      # Handle Annotated[T, "description"]
+      if get_origin(annotation) is Annotated:
+        args = get_args(annotation)
+        py_type = args[0]
+        if len(args) > 1:
+          description = args[1]
+      else:
+        py_type = annotation
+
+      json_type = type_map.get(py_type, "string")
+
+      properties[name] = {
+        "type": json_type,
+        "description": description,
+      }
+
+      if param.default is inspect.Parameter.empty:
+        required.append(name)
+  
+    fn_name = fn.__name__
+    if tag is not None:
+      fn_name += "-" + tag
+
+    return {
+      "type": "function",
+      "name": fn_name,
+      "description": inspect.getdoc(fn) or "",
+      "parameters": {
+        "type": "object",
+        "properties": properties,
+        "required": required,
+        "additionalProperties": False,
+      },
+    }
 
 class MCPHandlerHttp:
   def send_request(self,method,params={}):
@@ -157,6 +225,29 @@ class MCPHandlerSSE(MCPHandlerHttp):
     }
     MCPHandlerHttp.__init__(self,url)
 
+class MCPHandlerPytool:
+  def __init__(self,name):
+    print("mcp: loading pytool '%s'. caveat emptor..." % name)
+    namespace = {}
+    with open(name,"r") as f:
+      code = f.read()
+    self.ns = Namespace()
+    exec(code,self.ns.__dict__)
+    out = []
+    self.tool_names = []
+    self.tools_json = []
+    for i in self.ns.__dict__.keys():
+      if callable(self.ns.__dict__[i]):
+        print("mcp: got a callable '%s'" % i)
+        self.tool_names.append(i)
+        self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
+
+  def fn_call(self,name,fn_args):
+    print("mcp: calling pytool '%s'" % name)
+    fn_obj = self.ns.__dict__[name]
+    respval = fn_obj(**fn_args)
+    return respval
+
 class MCPHandlerStdio:
   def send_notification(self,method,params={}):
     request_id = next(self._id_counter)
@@ -275,6 +366,9 @@ class MCPLoader:
     elif mcpname.startswith("3lo+"):
       print("mcp: loading 3lo http '%s'" % mcpname)
       mcp = MCPHandler3LO(mcpname[4:])
+    elif os.path.isfile(mcpname) is True:
+      print("mcp: loading '%s' as pytool" % mcpname)
+      mcp = MCPHandlerPytool(mcpname)
     else:
       print("mcp: loading stdio '%s'" % mcpname)
       mcp = MCPHandlerStdio(mcpname)

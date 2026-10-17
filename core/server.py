@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+import os
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -8,7 +10,11 @@ MCPLoader = None
 def setMcpLoader(mcp_loader):
   global MCPLoader
   MCPLoader = mcp_loader
- 
+
+def getDataPath(template_name):
+  file_path = os.path.join(os.path.dirname(__file__), "../moonsugar", template_name)
+  return file_path
+
 class MCPHandler(BaseHTTPRequestHandler):
   def _send_json(self, obj, status=200):
     data = json.dumps(obj).encode("utf-8")
