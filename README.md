@@ -15,14 +15,18 @@ Use the following command line args:
 - -p/--prompt: set the prompt
 - -m/--model: set the model
 - -t/--tool: load a single tool
-- --mcp "cmdline": start an mcp
-- --mcp "http://url_goes_here": start an http mcp
-- --mcp-deny "arg": deny a single tool from all mcps. must be called after --mcp
+- --mcp "path/to/python/file": load a python file as an 'mcp', exposing global callables
+- --mcp "cmdline": use a mcp with stdio transport
+- --mcp "http://url_goes_here": use an http mcp (normal json-over-http transport)
+- --mcp "sse+https://url_goes_here": use an http mcp with sse
+- --mcp "3lo+https://url_goes_here": use an mcp with 3-legged oauth. includes sse+
 - -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
 - -a/--agentic: experimental. load a json file for hatchery mode
 - --toolbox <name>: load a set of tools that start with name
 - --persona <persona/name.md>: replace system prompt with persona
 ```
+
+For fine-grained MCP control, such as denying specific MCP functions or modifying their functionality with python hooks, see [skoomacat](docs/SKOOMACAT.md).
 
 You can set the following environment variables (note that these are overridden by -c's configuration file):
 ```
