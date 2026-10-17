@@ -20,3 +20,13 @@ there are two primary modes of use:
 * skoomacat [in.json] will load the profile from in.json and serve it on localhost:8000
 
 An MCP client can then connect to the new mcp, http://localhost:8000/, which exposes the tool catalog defined in the json config file.
+
+## Function Hooks
+
+skoomacat supports pre and post hooking for MCP functions. Have a look in moonsugar/examples/hooks.json for how to define hooks. You can use this to "wrap" a function call in arbitrary python code, modifying the arguments passed to the function, skipping the function entirely or modifying the returned value.
+
+This can be used for:
+
+- Fixing parameters hallucinations (e.g. "always use this tenant id")
+- Adding delays to tool calls (r2 analyze I'm looking at you)
+- Firewalling MCP's, toolcall visiblity

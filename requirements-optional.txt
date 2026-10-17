@@ -1,6 +1,2 @@
 # for term_ tools
 pyte
-# for vaporeon_ tools
-tree-sitter
-tree-sitter-c
-tree-sitter-cpp

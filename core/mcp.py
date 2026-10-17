@@ -397,16 +397,17 @@ class MCPLoader:
       if fn_name in mcp.tool_names:
         print("mcp: found server hosting '%s'" % fn_name)
         if fn_name in self.prehooks.keys():
-          print("mcp: evaluating prehook")
-          fn_args = eval(self.prehooks[fn_name],locals=[fn_args])
+          print("mcp: running prehook ('%s')" % self.prehooks[fn_name])
+          exec(self.prehooks[fn_name],globals={"args":fn_args})
           if fn_args is None:
             return "mcp: blocked by user-defined prehook"
-          elif isinstance(fn_args,string) is True:
-            return fn_args
         result = mcp.fn_call(fn_name,fn_args)
         if fn_name in self.posthooks.keys():
-          print("mcp: evaluating posthook")
-          result = eval(self.posthooks[fn_name],locals=[result])
+          print("mcp: running posthook ('%s')" % self.posthooks[fn_name])
+          def output(arg):
+            nonlocal result
+            result = arg
+          exec(self.posthooks[fn_name],globals={"args":fn_args,"output":output})
         return result
         break
     print("mcp: could not find '%s'" % fn_name)

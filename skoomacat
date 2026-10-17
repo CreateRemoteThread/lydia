@@ -66,8 +66,9 @@ if __name__ == "__main__":
     payload = {}
     payload["servers"] = CFG_MCP_LOAD
     payload["tools"] = MCPLoader.get_json()
-    payload["prehooks"] = MCPLoader.get_json()
-    payload["posthooks"] = MCPLoader.get_json()
+    # names = [i["name"] for i in payload["tools"]]
+    payload["prehooks"] = {}
+    payload["posthooks"] = {}
     with open(CFG_JSON_OUT,"w") as f:
       f.write(json.dumps(payload,indent=2))
     print("skoomacat: m'aiq knows many things others do not (%s)" % CFG_JSON_OUT)

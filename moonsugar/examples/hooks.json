@@ -1,0 +1,27 @@
+{
+  "servers": [
+    "example.py"
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "get_flag",
+      "description": "",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "chall": {
+            "type": "string",
+            "description": ""
+          }
+        },
+        "required": [
+          "chall"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "prehooks": {"get_flag":"args[\"chall\"] = 999111"},
+  "posthooks": {"get_flag":"output('FLAG_BANANA_BOAT')"}
+}
