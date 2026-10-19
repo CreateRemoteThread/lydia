@@ -401,6 +401,11 @@ class MCPLoader:
           exec(self.prehooks[fn_name],globals={"args":fn_args})
           if fn_args is None:
             return "mcp: blocked by user-defined prehook"
+        if "*" in self.prehooks.keys():
+          print("mcp: running global prehook ('%s')" % self.prehooks["*"])
+          exec(self.prehooks["*"],globals={"args":fn_args})
+          if fn_args is None:
+            return "mcp: blocked by user-defined global prehook"
         result = mcp.fn_call(fn_name,fn_args)
         if fn_name in self.posthooks.keys():
           print("mcp: running posthook ('%s')" % self.posthooks[fn_name])
@@ -408,6 +413,12 @@ class MCPLoader:
             nonlocal result
             result = arg
           exec(self.posthooks[fn_name],globals={"args":fn_args,"output":output})
+        if "*" in self.posthooks.keys():
+          print("mcp: running global posthook ('%s')" % self.posthooks["*"])
+          def output(arg):
+            nonlocal result
+            result = arg
+          exec(self.posthooks["*"],globals={"args":fn_args,"output":output})
         return result
         break
     print("mcp: could not find '%s'" % fn_name)

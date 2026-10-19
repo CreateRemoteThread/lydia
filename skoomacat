@@ -53,8 +53,8 @@ if __name__ == "__main__":
     MCPLoader.replace_inventory(tools_json)
     MCPLoader.install_prehooks(tools_prehooks)
     MCPLoader.install_posthooks(tools_posthooks)
-    host = "127.0.0.1"
-    port = 8000
+    host = core.config.getenv("SKOOMACAT_HOST","127.0.0.1")
+    port = int(core.config.getenv("SKOOMACAT_PORT","8000"))
     core.server.setMcpLoader(MCPLoader)
     print("skoomacat: m'aiq knows many things others do not (%s:%d)" % (host,port))
     httpd = ThreadingHTTPServer((host, port), core.server.MCPHandler)
