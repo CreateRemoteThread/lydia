@@ -26,15 +26,27 @@ if __name__ == "__main__":
   CFG_MODE = None
   CFG_JSON_OUT = None
   CFG_JSON_IN = None
-  if len(sys.argv) == 2:
-    CFG_JSON_IN = sys.argv[1]
+  core.config.defaultcfg()
+  CFG_HOST = core.config.getenv("SKOOMACAT_HOST","127.0.0.1")
+  CFG_PORT = int(core.config.getenv("SKOOMACAT_PORT","8000"))
+  CFG_LOGFILE = core.config.getenv("SKOOMACAT_LOGFILE",None)
+  opts, leftover = getopt.getopt(sys.argv[1:],"p:h:l:",["mcp=","logfile=","port=","host=","logfile="])
+  # CFG_MODE = Mode.JSON_LOAD
+  if len(leftover) != 1:
+    print("skoomacat: --mcp --mcp --mcp [out.json]")
+    print("skoomacat: --logfile=x --port=123 [in.json]")
+    sys.exit(0)
+  if os.path.isfile(leftover[0]) is True:
     CFG_MODE = Mode.JSON_LOAD
+    CFG_JSON_IN = leftover[0]
+    for arg,val in opts:
+      if arg in ["-p","--port"]:
+        CFG_PORT = int(val)
+      elif arg in ["-h","--host"]:
+        CFG_HOST = val
+      elif arg in ["-l","--logfile"]:
+        CFG_LOGFILE = val
   else:
-    core.config.defaultcfg()
-    opts, leftover = getopt.getopt(sys.argv[1:],"",["mcp="])
-    if len(leftover) != 1:
-      print("skoomacat: --mcp --mcp --mcp [out.json]")
-      sys.exit(0)
     CFG_MODE = Mode.JSON_SAVE
     CFG_JSON_OUT = leftover[0]
     for arg, val in opts:
@@ -53,11 +65,11 @@ if __name__ == "__main__":
     MCPLoader.replace_inventory(tools_json)
     MCPLoader.install_prehooks(tools_prehooks)
     MCPLoader.install_posthooks(tools_posthooks)
-    host = core.config.getenv("SKOOMACAT_HOST","127.0.0.1")
-    port = int(core.config.getenv("SKOOMACAT_PORT","8000"))
     core.server.setMcpLoader(MCPLoader)
-    print("skoomacat: m'aiq knows many things others do not (%s:%d)" % (host,port))
-    httpd = ThreadingHTTPServer((host, port), core.server.MCPHandler)
+    if CFG_LOGFILE is not None:
+      core.server.setLogfile(CFG_LOGFILE)
+    print("skoomacat: m'aiq knows many things others do not (%s:%d)" % (CFG_HOST,CFG_PORT))
+    httpd = ThreadingHTTPServer((CFG_HOST, CFG_PORT), core.server.MCPHandler)
     httpd.serve_forever()
   elif CFG_MODE == Mode.JSON_SAVE:
     MCPLoader = core.mcp.MCPLoader()

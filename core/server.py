@@ -8,6 +8,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 MCPLoader = None
 API_PATH = "/"
 
+def setLogfile(logfile):
+  print("todo: implement stats and logging")
+
 def setMcpLoader(mcp_loader):
   global MCPLoader
   MCPLoader = mcp_loader

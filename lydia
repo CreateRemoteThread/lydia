@@ -104,10 +104,12 @@ def main():
   else:
     print("info: off with her head! using anthropic-compatible agent core")
     from core.messaging import Agent
-  if core.config.getenv("STFU",default=None) is not None:
-    ASK_USER_ARR = []
-  else:
-    ASK_USER_ARR = [ask_user]
+  # experimental behaviour change: 
+  ASK_USER_ARR = []
+  # if core.config.getenv("STFU",default=None) is not None:
+  #   ASK_USER_ARR = []
+  # else:
+  #   ASK_USER_ARR = [ask_user]
   if CFG_MODEL is None:
     CFG_MODEL = core.config.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
   if CFG_HATCHERY is not None:

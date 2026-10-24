@@ -46,3 +46,4 @@ The logic of running a command works as follows (in tools/vmtool.py):
 ```
 
 It is possible, but a dumb idea, to list unscoped commands in CMD_FW (e.g. CMD_FW=bash). No monitoring is performed on shell_interactive_write: it is assumed that if a process is safe to start, it is safe to operate.
+

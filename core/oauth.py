@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sqlite3
 import requests
 import random
 import base64
@@ -8,6 +9,7 @@ import hashlib
 import string
 import re
 import core.config
+import json
 from urllib.parse import urlparse,parse_qs
 
 import threading
@@ -15,6 +17,14 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 CALLBACK_PORT = 8091
 CALLBACK_CODE = None
+
+def resp_to_json(pp):
+  if "application/json" in pp.headers.get("Content-Type"):
+    return pp.json()
+  else:
+    parsed = parse_qs(pp.text)
+    data = {k: v[0] if len(v) == 1 else v for k, v in parsed.items()}
+    return data
 
 class OauthRequestCatcher(BaseHTTPRequestHandler):
   def do_GET(self):
@@ -74,7 +84,7 @@ class OauthImpl:
 
   def user_3lo_auth(self,rsrc_metadata,auth_metadata,resource_url):
     global CALLBACK_PORT, CALLBACK_CODE
-    cv_raw = "".join(random.choices(string.ascii_letters + string.digits, k=8))
+    cv_raw = "".join(random.choices(string.ascii_letters + string.digits, k=64))
     digest = hashlib.sha256(cv_raw.encode("ascii")).digest()
     code_challenge = code_challenge = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
     # code_challenge = hashlib.sha256(cv_raw.encode("utf-8")).hexdigest()
@@ -111,6 +121,7 @@ class OauthImpl:
     if self.mcp_client_data is not None:
       try:
         payload["client_secret"] = self.mcp_client_data["client_secret"]
+        self.client_secret = self.mcp_client_data["client_secret"]
       except:
         print("oauth: could not load client_secret from MCP_CLIENT_DATA")
     # print(payload)
@@ -120,18 +131,43 @@ class OauthImpl:
       print("Polling...")
       time.sleep(1.0)
       pp = requests.post(token_endp,json=payload,verify=SSL_VERIFY)
-    return pp.json()
-    # print(pp.json())
+    return resp_to_json(pp)
 
   def get_auth_hdrs(self):
     return {
       "Authorization":"Bearer %s" % self.auth_data["access_token"]
     }
 
+  def try_refresh(self,base_url):
+    refresh_meta = core.config.getsubvar("MCP_AUTH_REFRESH",base_url,None)
+    if refresh_meta is None:
+      return False
+    print("oauth: attempting refresh of '%s'" % base_url)
+    token_endp = refresh_meta["token_endp"]
+    refresh_token = refresh_meta["refresh_token"]
+    client_id = refresh_meta["client_id"]
+    client_secret = refresh_meta["client_secret"]
+    resp = requests.post(token_endp,data={"grant_type":"refresh_token","refresh_token":refresh_token,"client_id":client_id,"client_secret":client_secret},verify=SSL_VERIFY)
+    # print(resp.text)
+    tokens = resp_to_json(resp)
+    if "refresh_token" in tokens.keys():
+      print("oauth: saving refresh token")
+      refresh_meta["refresh_token"] = tokens["refresh_token"]
+      core.config.setsubvar("MCP_AUTH_REFRESH",base_url,refresh_meta)
+      core.config.commitcfg()
+    if "access_token" in tokens.keys():
+      print("oauth: refresh successful")
+      self.auth_data = {"access_token":tokens["access_token"]}
+      return True
+    else:
+      return False
+ 
   def __init__(self,auth_hdr,base_url):
     global SSL_VERIFY
     print("oauth: got auth header")
     self.base_url = base_url
+    if self.try_refresh(base_url) is True:
+      return
     match = re.search(r'\bresource_metadata\s*=\s*"([^"]*)"', auth_hdr)
     if not match:
       print("oauth: could not find resource_metadata in auth header")
@@ -164,9 +200,19 @@ class OauthImpl:
         self.client_id = self.mcp_client_data["client_id"]
       except:
         print("oauth: cannot load client_id from MCP_CLIENT_DATA")
+        print("oauth: callback is http://localhost:8091 if you need to register")
         self.client_id = input("oauth: enter client id > ").rstrip()
     elif "registration_endpoint" in auth_metadata.keys():
       self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
     else:
+      print("oauth: callback is http://localhost:8091 if you need to register")
       self.client_id = input("oauth: enter client id > ").rstrip()
     self.auth_data = self.user_3lo_auth(resource_metadata,auth_metadata,resource_url)
+    if "refresh_token" in self.auth_data.keys():
+      refresh_meta = {}
+      refresh_meta["refresh_token"] = self.auth_data["refresh_token"]
+      refresh_meta["client_id"] = self.client_id
+      refresh_meta["client_secret"] = self.client_secret
+      refresh_meta["token_endp"] = auth_metadata["token_endpoint"]
+      core.config.setsubvar("MCP_AUTH_REFRESH",base_url,refresh_meta)
+      core.config.commitcfg()
