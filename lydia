@@ -7,6 +7,7 @@ import core.config
 import core.hatchery
 import core.memory
 import core.mcp
+import core.worker
 import tools
 import getopt
 import readline
@@ -43,6 +44,7 @@ def loadPrompt(prompt):
 
 def main():
   global Toolbox
+  CFG_ENABLE_WORKERS = False
   CFG_INTERACTIVE = False
   CFG_USR_PROMPT = None
   CFG_PERSONALITY = "You are a helpful assistant."
@@ -53,10 +55,12 @@ def main():
   CFG_HATCHERY = None
   DENIED_ALREADY = False
   core.config.defaultcfg()
-  args,extra = getopt.getopt(sys.argv[1:],"ic:p:s:t:m:r:a:",["cfg=","interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny=","pytool="])
+  args,extra = getopt.getopt(sys.argv[1:],"ic:p:s:t:m:r:a:",["cfg=","interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny=","pytool=","workers"])
   for arg,val in args:
     if arg in ["-c","--cfg"]:
       core.config.initcfg(val)
+    elif arg == "--workers":
+      CFG_ENABLE_WORKERS = True
     elif arg in ["-p","--prompt"]:
       if CFG_USR_PROMPT is not None:
         print("fatal: do not supply -p twice")
@@ -106,6 +110,8 @@ def main():
     from core.messaging import Agent
   # experimental behaviour change: 
   ASK_USER_ARR = []
+  if CFG_ENABLE_WORKERS:
+    ASK_USER_ARR = [core.worker.create_worker, core.worker.wait_worker]
   # if core.config.getenv("STFU",default=None) is not None:
   #   ASK_USER_ARR = []
   # else:
@@ -126,6 +132,8 @@ def main():
   agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + ASK_USER_ARR,model=CFG_MODEL,reasoning=CFG_REASONING)
   agent.set_mcploader(MCPLoader)
   Toolbox.execute_pytool_hooks(agent)
+  if CFG_ENABLE_WORKERS is True:
+    core.worker.__init_workers(agent)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:
       print("fatal: you must at least a user prompt with -p or use -i for interactive")

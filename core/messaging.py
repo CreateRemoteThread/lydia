@@ -11,6 +11,7 @@ import time
 import random
 import string
 import core.memory
+import copy
 import string
 from typing import Dict
 
@@ -130,6 +131,9 @@ class Agent:
     if max_output_tokens is not None:
       self.req["max_output_tokens"] = max_output_tokens
     self.tools = tools          # this is generic tools
+
+  def duplicate(self):
+    copy.copy(self)
 
   def flush_history(self):
     self.asst_msg_queue = []

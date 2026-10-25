@@ -6,10 +6,12 @@ import core.config
 Agent = None
 import core.memory
 import core.mcp
+import core.worker
 import json
 import uuid
 import jinja2
 import tools
+from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Annotated
 
 # each node-compatible interface will implement:
@@ -102,6 +104,8 @@ class Hatchery:
   def __init__(self, fn):
     global Agent, Drone
     self.nodes = {}
+    self.threadPool = ThreadPoolExecutor()
+    self.workers = []
     if Agent is None:
       if core.config.getenv("OFF_WITH_HER_HEAD",default=None) is None:
         from core.agent import Agent

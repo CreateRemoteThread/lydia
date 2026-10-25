@@ -2,7 +2,7 @@
 
 ![its lydia!](docs/img/lydia.png)
 
-Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [memory](docs/MEMORY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [tools](docs/TOOLS.md) | [htb](docs/HTB.md) | [skoomacat](docs/SKOOMACAT.md)
+Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [tools](docs/TOOLS.md) | [htb](docs/HTB.md) | [skoomacat](docs/SKOOMACAT.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
@@ -23,7 +23,7 @@ Use the following command line args:
 - -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
 - -a/--agentic: experimental. load a json file for hatchery mode
 - --toolbox <name>: load a set of tools that start with name
-- --persona <persona/name.md>: replace system prompt with persona
+- --workers: enable asynchronous subagents (workers)
 ```
 
 For fine-grained MCP control, such as denying specific MCP functions or modifying their functionality with python hooks, see [skoomacat](docs/SKOOMACAT.md).

@@ -10,6 +10,7 @@ import sys
 import time
 import random
 import string
+import copy
 import core.memory
 from typing import Dict
 
@@ -112,6 +113,9 @@ class Agent:
       self.req["max_output_tokens"] = max_output_tokens
     self.tools = tools          # this is generic tools
 
+  def duplicate(self):
+    return copy.copy(self)
+
   def flush_history(self):
     self.asst_msg_queue = []
     self.req["input"] = []  
@@ -141,10 +145,8 @@ class Agent:
 
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
-    # core.memory.memory_fade(self.req["input"])
     self.req["tools"] = []
     if len(self.tools) > 0: 
-      # self.req["tools"] = []
       for tl in self.tools:
         self.req["tools"].append(fn_to_tool_json(tl))
     if self.mcploader is not None:
@@ -163,7 +165,6 @@ class Agent:
         global SSL_VERIFY
         response = requests.post(
           self.base_url,
-          # f"{self.base_url}/responses",
           headers = self.headers,
           json = self.req,
           timeout = self.timeout,
@@ -265,6 +266,11 @@ class Agent:
           else: # found the function first pass
             print("info: calling regular function '%s'" % fn_name)
             respval = fn_obj(**fn_args)
+            # -design note-: too unwieldy, don't use this.
+            # if fn_name == "create_worker":
+            #   print("info: wiping memory of prompt argument")
+            #   fn_args["prompt"] = ""
+            #  resp_obj["arguments"] = json.dumps(fn_args)
           if "id" in resp_obj.keys():
             CALL_ID = resp_obj["id"]
           else:
@@ -292,6 +298,3 @@ class Agent:
 
 if __name__ == "__main__":
   print("You probably want /r/vibecoding instead")
-  # a = Agent(tools=[ask_user])
-  # data = a.req_loop("Write a poem about fruit. Ask the user what type of fruit.") 
-  # print(data) 
