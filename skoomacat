@@ -37,6 +37,7 @@ if __name__ == "__main__":
     print("skoomacat: --logfile=x --port=123 [in.json]")
     sys.exit(0)
   if os.path.isfile(leftover[0]) is True:
+    print("skooma: last argument is a real file, json_load")
     CFG_MODE = Mode.JSON_LOAD
     CFG_JSON_IN = leftover[0]
     for arg,val in opts:
@@ -47,6 +48,7 @@ if __name__ == "__main__":
       elif arg in ["-l","--logfile"]:
         CFG_LOGFILE = val
   else:
+    print("skooma: last argument is not a rael file, json_save")
     CFG_MODE = Mode.JSON_SAVE
     CFG_JSON_OUT = leftover[0]
     for arg, val in opts:

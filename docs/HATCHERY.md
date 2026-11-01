@@ -12,6 +12,7 @@ A Hatchery object represents a network of Baneling() or Drone(core.agent.Agent) 
 
 - A Baneling object is a static tool call ("type":"tool").
 - A Drone object is an LLM inference call (no type / default type).
+- A Overlord object is a special node which starts every node specified in the 'children' property, and waits for them to finish. ("type":"workers"). See hatchery/bananapool.json for example.
 
 Each node must implement:
 

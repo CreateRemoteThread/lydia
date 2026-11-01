@@ -111,7 +111,7 @@ def main():
   # experimental behaviour change: 
   ASK_USER_ARR = []
   if CFG_ENABLE_WORKERS:
-    ASK_USER_ARR = [core.worker.create_worker, core.worker.wait_worker]
+    ASK_USER_ARR = [core.worker.create_worker]
   # if core.config.getenv("STFU",default=None) is not None:
   #   ASK_USER_ARR = []
   # else:

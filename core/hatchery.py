@@ -6,18 +6,45 @@ import core.config
 Agent = None
 import core.memory
 import core.mcp
-import core.worker
 import json
 import uuid
 import jinja2
 import tools
 from concurrent.futures import ThreadPoolExecutor, wait
+import threading
 from typing import Annotated
 
 # each node-compatible interface will implement:
 # __init__(self,...), because it must
 # run(self,ctx), which hatchery calls
 
+class Overlord:
+  def __init__(self,node_name,children=[],parent_hatch=None):
+    print("overlord: initializing overlord '%s'" % node_name)
+    self.name = node_name
+    self.children = children
+    self.parent = parent_hatch
+
+  # -design note-: ctx is currently thread-unsafe for overlord's
+  # children (in the thread-pool). this should be read-only.
+  def run(self,ctx):
+    self.threads = []
+    def local_task_run(c,ctx):
+      print("hatchery: saving ctx")
+      output = self.parent.nodes[c].run(ctx)
+      if self.parent.nodes[c].save_output is not None:
+        ctx[self.parent.nodes[c].save_output] = output
+    # self.results = [None] * num_threads
+    for c in self.children:
+      # print("starting thread...")
+      thread = threading.Thread(target=local_task_run, args=(c,ctx,))
+      self.threads.append(thread)
+      thread.start()
+    for t in self.threads:
+      # print(ctx)
+      t.join()
+    return "done"
+ 
 def fread_helper(fn):
   if os.path.isfile(fn) is False:
     print("hatchery: fread_helper: '%s' is not a file"  %fn)
@@ -25,7 +52,7 @@ def fread_helper(fn):
   else:
     with open(fn,"r") as f:
       return f.read()
-  
+
 class Baneling:
   def __init__(self,node_name,tool_name,tool_args={}):
     print("baneling: initializing baneling '%s'" % node_name)
@@ -105,7 +132,6 @@ class Hatchery:
     global Agent, Drone
     self.nodes = {}
     self.threadPool = ThreadPoolExecutor()
-    self.workers = []
     if Agent is None:
       if core.config.getenv("OFF_WITH_HER_HEAD",default=None) is None:
         from core.agent import Agent
@@ -149,6 +175,14 @@ class Hatchery:
         tool_name = node.get("tool_name",None)
         tool_args = node.get("tool_args",{})
         self.nodes[node_name] = Baneling(node_name,tool_name,tool_args)
+        self.nodes[node_name].save_output = node.get("save_output",None)
+        self.nodes[node_name].write_output = node.get("write_output",None)
+        self.nodes[node_name].next = node.get("next",None)
+        self.nodes[node_name].defaultnext = node.get("defaultnext",None)
+      elif node_type == "workers":
+        node_name = node.get("name","%s" % uuid.uuid4())
+        children = node.get("children")
+        self.nodes[node_name] = Overlord(node_name,children,self)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
         self.nodes[node_name].next = node.get("next",None)
