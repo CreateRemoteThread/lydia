@@ -83,7 +83,7 @@ def make_drone_class(agent_class):
       self.toolbox = tools.ToolLoader(Hatchery)
       for p in pytools:
         self.toolbox.load_pytool(p)
-      self.toolbox.execute_pytool_hooks(self)
+      # self.toolbox.execute_pytool_hooks(self)
       self.parent_hatchery = parent_hatchery # allows cross-node calls
       self.name = node_name
       self.usr_prompt = usr_prompt
@@ -107,6 +107,7 @@ def make_drone_class(agent_class):
       for m in mcps:
         # print("loading mcp '%s'" % m)
         self.mcp_loader.load_mcp(m)
+      self.mcp_loader.execute_pytool_hooks(self)
       super().__init__(sys_prompt=sys_prompt,tools=[self.toolbox.fetch(t) for t in self.avail_tools] + [self.parent_hatchery.generate_fn(t) for t in self.node_tools],model=model,base_url=base_url)
       # print("ok")
     def run(self,ctx):

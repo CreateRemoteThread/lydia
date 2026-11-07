@@ -44,7 +44,6 @@ class ToolLoader:
     else:
       self.HatcheryClass = HatcheryClass
     self.exec_ns_array = [] # store namespace objects
-    self.pytool_hooks = []  # store _load_pytool hooks
     self.hatch_store = {}
     self.hatch_names = {}
     self.short_name_store = {}
@@ -70,31 +69,6 @@ class ToolLoader:
     self.registerFunction("debug_print",debug.debug_print, "Print a debugging message.")
     self.registerFunction("mem_store",memory.store, "Store a fact to persistent memory.")
     self.registerFunction("mem_fetch",memory.fetch, "Retrieve facts from persistent memory based on a keyword.")
-
-  def execute_pytool_hooks(self,agent):
-    for f in self.pytool_hooks:
-      print("tools: executing pytool hook...")
-      f(agent)
-
-  def load_pytool(self,name):
-    print("tools: loading pytool '%s'. caveat emptor..." % name)
-    namespace = {}
-    with open(name,"r") as f:
-      code = f.read()
-    ns = Namespace()
-    exec(code,ns.__dict__)
-    out = []
-    self.exec_ns_array.append(ns)
-    for i in ns.__dict__.keys():
-      if callable(ns.__dict__[i]):
-        if i == "_load_pytool":
-          print("tools: got special _load_pytool, storing agent")
-          self.pytool_hooks.append(ns.__dict__[i])
-        else:
-          print("tools: got a callable '%s'" % i)
-          self.registerFunction(i,ns.__dict__[i],ns.__dict__[i].__doc__ or "")
-          out.append(i)
-    return out
 
   def fetch_toolbox(self,name):
     out = []

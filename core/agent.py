@@ -122,6 +122,7 @@ class Agent:
 
   def set_mcploader(self,mcploader):
     self.mcploader = mcploader
+    self.mcploader.execute_pytool_hooks(self)
 
   @property
   def headers(self) -> Dict[str, str]:

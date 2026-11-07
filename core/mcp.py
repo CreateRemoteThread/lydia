@@ -236,11 +236,16 @@ class MCPHandlerPytool:
     out = []
     self.tool_names = []
     self.tools_json = []
+    self.pytool_hook = None
     for i in self.ns.__dict__.keys():
       if callable(self.ns.__dict__[i]):
-        print("mcp: got a callable '%s'" % i)
-        self.tool_names.append(i)
-        self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
+        if i == "_load_pytool":
+          print("mcp: found _load_pytool")
+          self.pytool_hook = self.ns.__dict__[i]
+        else:
+          print("mcp: got a callable '%s'" % i)
+          self.tool_names.append(i)
+          self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
 
   def fn_call(self,name,fn_args):
     print("mcp: calling pytool '%s'" % name)
@@ -341,6 +346,12 @@ class MCPLoader:
 
   def replace_inventory(self,new_json):
     self.tool_json = new_json
+
+  def execute_pytool_hooks(self,agent):
+    for m in self.mcplist:
+      if hasattr(m,"pytool_hook"):
+        if m.pytool_hook is not None:
+          m.pytool_hook(agent)
 
   def deny_tool(self,toolname):
     print("mcp: denying tool '%s'" % toolname)
