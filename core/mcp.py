@@ -325,6 +325,7 @@ class MCPLoader:
     self.tool_json = None
     self.prehooks = {}
     self.posthooks = {}
+    self.bl_calls = []
 
   def install_prehooks(self,prehooks_json):
     self.prehooks = prehooks_json
@@ -382,6 +383,9 @@ class MCPLoader:
         self.tool_names.append(t)
     self.mcplist.append(mcp)
 
+  def blacklist(self,bl_call):
+    self.bl_calls.append(bl_call)
+
   def get_json(self):
     if self.tool_json is not None:
       return self.tool_json
@@ -390,6 +394,8 @@ class MCPLoader:
       t += mcp.tools_json 
     for tool in t:
       tool["type"] = "function"
+    t = [obj for obj in t if obj["name"] not in self.bl_calls]
+    # print(json.dumps(t,indent=2))
     return t
 
   def mcp_call(self,fn_name,fn_args):

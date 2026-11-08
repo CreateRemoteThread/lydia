@@ -1,6 +1,6 @@
 # Lydia - Workers
 
-Note: This functionality is experimental, and is known to have potentially unsolveable problems, at least with this current architecture.
+Note: this function is deprecated. Let this document remain as a monument to madness. See [metamagic][METAMAGIC.md] instead.
 
 "Workers" are my attempt to implement a form of subagents, which are common to other AI client tools. This is implemented in two function calls:
 
