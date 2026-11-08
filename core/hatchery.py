@@ -34,14 +34,11 @@ class Overlord:
       output = self.parent.nodes[c].run(ctx)
       if self.parent.nodes[c].save_output is not None:
         ctx[self.parent.nodes[c].save_output] = output
-    # self.results = [None] * num_threads
     for c in self.children:
-      # print("starting thread...")
       thread = threading.Thread(target=local_task_run, args=(c,ctx,))
       self.threads.append(thread)
       thread.start()
     for t in self.threads:
-      # print(ctx)
       t.join()
     return "done"
  
@@ -183,7 +180,6 @@ class Hatchery:
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
         self.nodes[node_name].next = node.get("next",None)
-        # self.nodes[node_name].defaultnext = node.get("defaultnext",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
 
   def run(self,ctx=None,startNode=None):

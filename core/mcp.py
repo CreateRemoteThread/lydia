@@ -86,7 +86,20 @@ def fn_to_tool_json(fn,tag=None):
 
 class MCPHandlerHttp:
   def send_request(self,method,params={}):
-    return self.send_notification(method,params).get("result")
+    global SSL_VERIFY
+    request_id = next(self._id_counter)
+    payload = {
+      "jsonrpc":"2.0",
+      "id":request_id,
+      "method":method,
+      "params":params
+    }
+    resp = self.session.post(self.baseurl,json=payload,headers=self._hdrs,verify=SSL_VERIFY)
+    if resp.headers.get("Mcp-Session-Id",None) is not None:
+      print("mcp: got mcp-session-id header")
+      self._hdrs["Mcp-Session-Id"] = resp.headers.get("Mcp-Session-Id",None)
+    # print(resp.content)
+    return resp.json().get("result")
 
   def fn_call(self,name,params):
     r = self.send_request("tools/call",{"name":name,"arguments":params})
@@ -97,21 +110,11 @@ class MCPHandlerHttp:
     else:
       return cont
 
-  def send_notification(self,method,params={}):
-    global SSL_VERIFY
-    request_id = next(self._id_counter)
-    payload = {
-      "jsonrpc":"2.0",
-      "id":request_id,
-      "method":method,
-      "params":params
-    }
-    data = self.session.post(self.baseurl,json=payload,verify=SSL_VERIFY)
-    return data.json()
-
   def __init__(self,url):
     self._id_counter = itertools.count(1)
     self.baseurl = url
+    if hasattr(self,"_hdrs") is False:
+      self._hdrs = {}
     self.session = requests.Session()
     self.send_request("initialize",
       {
@@ -172,7 +175,7 @@ class MCPHandler3LO(MCPHandlerHttp):
 
   def __init__(self,url):
     self.url = url
-    self._hdrs = {}
+    # self._hdrs = {}
     MCPHandlerHttp.__init__(self,url)
 
 class MCPHandlerSSE(MCPHandlerHttp):
@@ -254,18 +257,6 @@ class MCPHandlerPytool:
     return respval
 
 class MCPHandlerStdio:
-  def send_notification(self,method,params={}):
-    request_id = next(self._id_counter)
-    payload = {
-      "jsonrpc":"2.0",
-      "id":request_id,
-      "method":method,
-      "params":params
-    }
-    self.proc.stdin.write(json.dumps(payload) + "\n")
-    self.proc.stdin.flush()
-
-
   def send_request(self,method,params=None):
     request_id = next(self._id_counter)
     payload = {
@@ -319,7 +310,6 @@ class MCPHandlerStdio:
       }
     )
     # removed: vibe-mcp shits itself with this
-    # self.send_notification("notification/initialized")
     r = self.send_request("tools/list")
     self.tools_json = r.get("tools",[])
     for i in self.tools_json:
