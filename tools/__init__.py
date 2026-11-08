@@ -4,9 +4,6 @@ import tools.filetool
 import tools.vmtool
 import tools.minibrowser
 import tools.term
-import tools.chrome
-import tools.debug
-import tools.memory
 import inspect
 
 class Namespace:
@@ -65,10 +62,6 @@ class ToolLoader:
     self.registerFunction("term_locatechr",term.term_locatechr, "Locate a character on the screen.")
     self.registerFunction("term_interact",term.term_interact, "Write or send to the interactive process terminal.")
     self.registerFunction("term_kill",term.term_kill, "Terminate the interactive process.")
-    self.registerFunction("chrome_debug",chrome.devtools, "Send a request to a Chrome DevTools server at http://localhost:9222/ .")
-    self.registerFunction("debug_print",debug.debug_print, "Print a debugging message.")
-    self.registerFunction("mem_store",memory.store, "Store a fact to persistent memory.")
-    self.registerFunction("mem_fetch",memory.fetch, "Retrieve facts from persistent memory based on a keyword.")
 
   def fetch_toolbox(self,name):
     out = []
