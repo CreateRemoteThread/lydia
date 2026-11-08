@@ -77,13 +77,10 @@ class Drone:
 
 def make_drone_class(agent_class):
   class Drone_Class(agent_class):
-    def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,defaultnext=None,model=None,base_url=None,parent_hatchery=None,mcps=[],pytools=[]):
+    def __init__(self,node_name,sys_prompt,usr_prompt,_tools=[],next=None,defaultnext=None,model=None,base_url=None,parent_hatchery=None,mcps=[]):
       print("drone: initializing drone '%s'" % node_name)
       self.mcp_loader = core.mcp.MCPLoader()
       self.toolbox = tools.ToolLoader(Hatchery)
-      for p in pytools:
-        self.toolbox.load_pytool(p)
-      # self.toolbox.execute_pytool_hooks(self)
       self.parent_hatchery = parent_hatchery # allows cross-node calls
       self.name = node_name
       self.usr_prompt = usr_prompt
@@ -164,11 +161,10 @@ class Hatchery:
         node_base_url =  node.get("base_url",core.config.getenv("OPENAI_BASE_URL","https://api.openai.com/v1"))
         node_name =  node.get("name","%s" % uuid.uuid4())
         sys_prompt = node.get("sys_prompt","You are a helpful assistant.")
-        usr_prompt = node["usr_prompt"]
+        usr_prompt = node["prompt"]
         tools  = node.get("tools",[])
-        pytools = node.get("pytools",[])
         mcps  = node.get("mcp",[])
-        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),defaultnext=node.get("defaultnext",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps,pytools=pytools)
+        self.nodes[node_name] = Drone(node_name,sys_prompt,usr_prompt,tools,next=node.get("next",None),model=node_model,base_url=node_base_url,parent_hatchery=self,mcps = mcps)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
       elif node_type == "tool":
@@ -179,15 +175,15 @@ class Hatchery:
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
         self.nodes[node_name].next = node.get("next",None)
-        self.nodes[node_name].defaultnext = node.get("defaultnext",None)
-      elif node_type == "workers":
+        # self.nodes[node_name].defaultnext = node.get("defaultnext",None)
+      elif node_type == "pool":
         node_name = node.get("name","%s" % uuid.uuid4())
         children = node.get("children")
         self.nodes[node_name] = Overlord(node_name,children,self)
         self.nodes[node_name].save_output = node.get("save_output",None)
         self.nodes[node_name].write_output = node.get("write_output",None)
         self.nodes[node_name].next = node.get("next",None)
-        self.nodes[node_name].defaultnext = node.get("defaultnext",None)
+        # self.nodes[node_name].defaultnext = node.get("defaultnext",None)
     print("hatchery: init ok with %d nodes" % len(self.nodes.keys()))
 
   def run(self,ctx=None,startNode=None):
@@ -223,27 +219,6 @@ class Hatchery:
       if drone.next is None:
         print(output)
         break
-      elif isinstance(drone.next,list):
-        if len(drone.next) == 0:
-          print("fatal: drone '%s' has an empty nextlist")
-          sys.exit(-1)
-        if len(drone.next) == 1:
-          print("hatchery: drone '%s' nextlist contains one item, routing to '%s'" % (drone.name,drone.next[0]))
-          drone = self.nodes[drone.next[0]]
-          continue
-        nextSelected = False
-        for i in drone.next[:-1]:
-          if i in output and i in self.nodes.keys():
-            print("hatchery: passing from '%s' to '%s'" % (drone.name,i))
-            drone = self.nodes[i]
-            nextSelected = True
-        if nextSelected is False:
-          print("hatchery: passing to default next '%s'" % drone.defaultnext)
-          if drone.defaultnext not in self.nodes.keys():
-            print("hatchery: attempting an invalid pass to nonexistent node '%s'" % drone.defaultnext)
-            sys.exit(0)  
-          drone = self.nodes[drone.defaultnext]
-        continue
       else:
         print("hatchery: passing from '%s' to '%s'" % (drone.name, drone.next))
         drone = self.nodes[drone.next]

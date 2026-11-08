@@ -5,7 +5,7 @@
   "nodes":[
   {
     "name":"FruitStoryBananas",
-    "usr_prompt":"Write a short story about bananas, 4 sentences maximum."
+    "prompt":"Write a short story about bananas, 4 sentences maximum."
   }
   ]
 }

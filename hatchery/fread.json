@@ -8,7 +8,7 @@
   "nodes":[
   {
     "name":"FruitStoryBananas",
-    "usr_prompt":"{{ ctx.fread(ctx.filename) }}"
+    "prompt":"{{ ctx.fread(ctx.filename) }}"
   }
   ]
 }

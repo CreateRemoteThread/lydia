@@ -5,23 +5,23 @@
   "nodes":[
   {
     "name":"start",
-    "type":"workers",
+    "type":"pool",
     "children":["FruitStoryBananas","FruitStoryGuavas"],
     "next":"StoryReviewer"
   },
   {
     "name":"FruitStoryBananas",
-    "usr_prompt":"Write a short story about bananas, 4 sentences maximum.",
+    "prompt":"Write a short story about bananas, 4 sentences maximum.",
     "save_output":"BananaStory"
   },
   {
     "name":"FruitStoryGuavas",
-    "usr_prompt":"Write a short story about guavas, 4 sentences maximum.",
+    "prompt":"Write a short story about guavas, 4 sentences maximum.",
     "save_output":"GuavaStory"
   },
   {
     "name":"StoryReviewer",
-    "usr_prompt":"Review this story, check if it is about bananas:\n{{ ctx.BananaStory }}"
+    "prompt":"Review this story, check if it is about bananas:\n{{ ctx.BananaStory }}",
   }
   ]
 }

@@ -2,9 +2,9 @@
 
 ### Problem
 
-It is not reasonable to implement a complex workflow using a single instance of core.agent.Agent and one req_loop call, no matter how complex the prompting and toolset, or "how reasoning" the model is.
+It is fundamentally inappropriate to rely on LLM technology to perform error-proof orchestration (in simpler words, LLM's cannot reliably do a for block or if statement). By extension, it is not appropriate to use LLM's to perform complex orchestration, regardless of it's "reasoning ability" or how Frontier it is.
 
-Therefore, it is critical to build a way for agent instances to pass content to one another.
+Hatchery attempts to solve this by implementing a deterministic orchestration layer on top of AI 'nodes'. This helps us achieve reliable coverage on breadth-first tasks without relying on the LLM to do all the steps in a giga-prompt.
 
 ### Architecture
 
@@ -21,18 +21,12 @@ Each node must implement:
 - node.save_output
 - node.write_output
 
-A drone can specify one or more "next" nodes:
-
-- If a drone has zero next nodes (i.e. next is not present): hatchery will print the output of that drone and exit.
-- If a drone has exactly one next node: hatchery will run the next drone.
-- If a drone has more than one next node: hatchery will check the output of the current drone. If any of the next node names are present, it will route to that drone. If not, it will route to the last node as a default case. (todo: consider changing).
-
 ### Prompting / The 'ctx' object
 
 In Hatchery mode, prompts are constructed using the Jinja2 templating engine - text enclosed in double curly braces are considered special. For example:
 
 ```
-"user_prompt":"Write a story about {{ ctx.fruittype }}"
+"prompt":"Write a story about {{ ctx.fruittype }}"
 ```
 
 could be "Write a story about bananas", "write a story about guavas", etc.
