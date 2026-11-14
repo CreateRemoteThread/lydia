@@ -29,3 +29,4 @@ def helper_rename_function(fn_name):
 Here, the primary loop maintains a minimal context (the list of sub_ functions, and one invocation to helper_rename_function each), while "subagents" (clones of the original agent) work on the actual renaming task.
 
 There is some "analysis tax": for example, when using this to rename a binary with a pile of plt resolver stubs, Binja will attempt to work out what the plt looks like again and again (but this still beats lugging around millions of tokens in a single thread of context, or the duct-tape of "subagents").
+

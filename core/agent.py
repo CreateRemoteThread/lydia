@@ -104,6 +104,8 @@ class Agent:
     self.req["instructions"] = sys_prompt
     self.req["metadata"] = None
     self.req["model"] = model
+    self.req["prompt_cache_key"] = "lydia-v1"
+    # self.req["prompt_cache_options"] = {"ttl":"30m"}
     self.req["stream"] = False
     # -design note-
     # this is to support routing between nodes - there is no

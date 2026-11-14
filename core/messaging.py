@@ -119,6 +119,7 @@ class Agent:
       self.req["reasoning"] = {"effort":reasoning}
     # self.req["include"] = []
     self.req["messages"] = []
+    self.req["cache_control"] = {"type": "ephemeral"}
     self.req["system"] = [{"type":"text","text":sys_prompt}]
     self.req["max_tokens"] = core.config.getenv("ANTHROPIC_MAX_TOKENS",default=64000)
     self.req["metadata"] = None
