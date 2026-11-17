@@ -1,6 +1,6 @@
 # skoomacat
 
-![skooma cat's whimsy!](img/skoomcat.png)
+![skooma cat's whimsy!](docs/img/skoomcat.png)
 
 ## Why?
 
