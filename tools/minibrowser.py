@@ -12,9 +12,9 @@ def web_request(method: Annotated[str, "request method"], url: Annotated[str, "r
   global SSL_VERIFY
   print("info: web_request(method='%s',url='%s',data='%s') called" % (method,url,data))
   if len(data) == 0:
-    response = requests.request(method=method,url=url,verify=SSL_VERIFY,trust_env=False)
+    response = requests.request(method=method,url=url,verify=SSL_VERIFY)
   else:
-    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY, trust_env=False)
+    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY)
   status_line = f"HTTP/1.1 {response.status_code} {response.reason}" 
   headers = "\n".join(f"{key}: {value}" for key, value in response.headers.items())
   data = response.text
@@ -26,9 +26,9 @@ def web_download_file(method: Annotated[str, "request method"], url: Annotated[s
   print("info: web_download_file(method='%s',url='%s',data='%s',filename='%s') called" % (method,url,data,filename))
   global SSL_VERIFY
   if len(data) == 0:
-    response = requests.request(method=method,url=url,verify=SSL_VERIFY,trust_env=False)
+    response = requests.request(method=method,url=url,verify=SSL_VERIFY)
   else:
-    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY,trust_env=False)
+    response = requests.request(method=method,url=url,data=data,verify=SSL_VERIFY)
   status_line = f"HTTP/1.1 {response.status_code} {response.reason}"
   filename = core.sandbox.is_path_safe(filename)
   if filename is False:

@@ -73,6 +73,9 @@ class MCPHandler(BaseHTTPRequestHandler):
       return
 
     if method == "tools/list":
+      t = MCPLoader.get_json()
+      for tool in t:
+        tool["inputSchema"] = tool.pop("parameters")
       self._send_json({
         "jsonrpc": "2.0",
         "id": req_id,
