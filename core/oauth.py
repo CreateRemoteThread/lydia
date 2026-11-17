@@ -78,7 +78,7 @@ class OauthImpl:
     resp = pp.json()
     if "client_id" in resp.keys():
       print("oauth: dynamic register successful, client_id '%s'" % resp["client_id"])
-      return resp["client_id"]
+      return (resp["client_id"],resp["client_secret"])
     else:
       return input("oauth: dynamic client register failed, enter client_id > ").rstrip()
 
@@ -203,7 +203,7 @@ class OauthImpl:
         print("oauth: callback is http://localhost:8091 if you need to register")
         self.client_id = input("oauth: enter client id > ").rstrip()
     elif "registration_endpoint" in auth_metadata.keys():
-      self.client_id = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
+      (self.client_id,self.client_secret) = self.dynamic_register_client(auth_metadata["registration_endpoint"],resource_url)
     else:
       print("oauth: callback is http://localhost:8091 if you need to register")
       self.client_id = input("oauth: enter client id > ").rstrip()
