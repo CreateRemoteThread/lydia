@@ -138,6 +138,7 @@ class MCPHandlerHttp:
         # print("mcp: tokenmaxer scum detected. removing icons")
         i.pop("icons")
 
+
 class MCPHandler3LO(MCPHandlerHttp):
   def send_request(self,method,params={}):
     global SSL_VERIFY
@@ -228,6 +229,40 @@ class MCPHandlerSSE(MCPHandlerHttp):
     }
     MCPHandlerHttp.__init__(self,url)
 
+class MCPHandlerBuiltins:
+  def __init__(self,fn_name):
+    print("mcp: loading builtin tool(s) '%s'. caveat emptor..." % fn_name)
+    fn_list = fn_name.split(",")
+    name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "builtins.py")
+    with open(name,"r") as f:
+      code = f.read()
+    self.ns = Namespace()
+    exec(code,self.ns.__dict__)
+    out = []
+    self.tool_names = []
+    self.tools_json = []
+    self.pytool_hook = None
+    def inFnList(func_name,func_list):
+      for f in func_list:
+        if func_name.startswith(f):
+          return True
+      return False
+    for i in self.ns.__dict__.keys():
+      if callable(self.ns.__dict__[i]):
+        if inFnList(i,fn_list):
+          print("mcp: got a callable '%s'" % i)
+          self.tool_names.append(i)
+          self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
+
+  def fn_call(self,name,fn_args):
+    print("mcp: calling pytool '%s'" % name)
+    fn_obj = self.ns.__dict__[name]
+    respval = fn_obj(**fn_args)
+    if respval is None:
+      print("mcp: fn_call '%s' did not return" % name)
+      sys.exit(0)
+    return str(respval)
+    
 class MCPHandlerPytool:
   def __init__(self,name):
     print("mcp: loading pytool '%s'. caveat emptor..." % name)
@@ -326,6 +361,9 @@ class MCPLoader:
     self.prehooks = {}
     self.posthooks = {}
     self.bl_calls = []
+    self.fn_names = []
+    self.fn_list = {}
+    self.fn_json = []
 
   def install_prehooks(self,prehooks_json):
     self.prehooks = prehooks_json
@@ -344,13 +382,6 @@ class MCPLoader:
         if m.pytool_hook is not None:
           m.pytool_hook(agent)
 
-  def deny_tool(self,toolname):
-    print("mcp: denying tool '%s'" % toolname)
-    for mcpserver in self.mcplist:
-      print("mcp: purging '%s' from tool list" % (toolname))
-      mcpserver.tools_json = [item for item in mcpserver.tools_json if item.get("name") != toolname]
-      mcpserver.tool_names = [item for item in mcpserver.tool_names if item != toolname]
-
   def load_mcp(self,mcpname_):
     if self.mcp_alias_table is None:
       self.mcp_alias_table = core.config.getenv("MCP_ALIAS",{})
@@ -368,9 +399,12 @@ class MCPLoader:
     elif mcpname.startswith("3lo+"):
       print("mcp: loading 3lo http '%s'" % mcpname)
       mcp = MCPHandler3LO(mcpname[4:])
-    elif os.path.isfile(mcpname) is True:
-      print("mcp: loading '%s' as pytool" % mcpname)
-      mcp = MCPHandlerPytool(mcpname)
+    elif mcpname.startswith("builtins:") and len(mcpname) > 10:
+      mcp = MCPHandlerBuiltins(mcpname[9:])
+    elif mcpname.endswith(".py") and os.path.isfile(mcpname):
+      if os.path.isfile(mcpname):
+        print("mcp: loading '%s' as pytool" % mcpname)
+        mcp = MCPHandlerPytool(mcpname)
     else:
       print("mcp: loading stdio '%s'" % mcpname)
       mcp = MCPHandlerStdio(mcpname)
@@ -383,6 +417,12 @@ class MCPLoader:
         self.tool_names.append(t)
     self.mcplist.append(mcp)
 
+  def load_fn(self,fn):
+    print("mcp: loading python function '%s'" % fn.__name__)
+    self.fn_names.append(fn.__name__)
+    self.fn_list[fn.__name__] = fn
+    self.fn_json.append(fn_to_tool_json(fn))
+
   def blacklist(self,bl_call):
     self.bl_calls.append(bl_call)
 
@@ -390,16 +430,20 @@ class MCPLoader:
     if self.tool_json is not None:
       return self.tool_json
     t = []
+    t += self.fn_json
     for mcp in self.mcplist:
-      t += mcp.tools_json 
+      t += mcp.tools_json
     for tool in t:
       tool["type"] = "function"
     t = [obj for obj in t if obj["name"] not in self.bl_calls]
-    # print(json.dumps(t,indent=2))
     return t
-
+ 
   def mcp_call(self,fn_name,fn_args):
     print("mcp: mcp_call('%s','%s')" % (fn_name,fn_args))
+    if fn_name in self.fn_names:
+      print("mcp: found in fn_names, passing to arbitrary function")
+      fn_obj = self.fn_list[fn_name]
+      fn_obj(**fn_args)
     for mcp in self.mcplist:
       if fn_name in mcp.tool_names:
         print("mcp: found server hosting '%s'" % fn_name)
@@ -433,8 +477,7 @@ class MCPLoader:
         return result
         break
     print("mcp: could not find '%s'" % fn_name)
-    return None
-    # sys.exit(0)
+    return "error: could not find '%s'" % fn_name
 
 if __name__ == "__main__":
   print("You probably want /r/vibecoding instead")

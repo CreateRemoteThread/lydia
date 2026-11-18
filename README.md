@@ -2,7 +2,7 @@
 
 ![its lydia!](docs/img/lydia.png)
 
-Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [slashem](docs/SLASHEM.md) | [hatchery](docs/HATCHERY.md) | [tools](docs/TOOLS.md) | [htb](docs/HTB.md) | [skoomacat](docs/SKOOMACAT.md) | [metamagic](docs/METAMAGIC.md)
+Docs: [quickstart](docs/QUICKSTART.md) | [safety](docs/SAFETY.md) | [slashem](docs/SLASHEM.md) | [htb](docs/HTB.md) | [skoomacat](docs/SKOOMACAT.md) | [metamagic](docs/METAMAGIC.md)
 
 This is an extremely bare-bones tool, meant for interfacing with LLM's while keeping the token count down, and providing granular visibility / customisation around tool calls.
 
@@ -14,16 +14,17 @@ Use the following command line args:
 - -c/--cfg: use a config file
 - -p/--prompt: set the prompt
 - -m/--model: set the model
-- -t/--tool: load a single tool
+- --mcp "builtins:web,term": load builtin tools (from core/builtins.py) starting with 'web' or 'term'
+  - shell: shell functions (i.e. subprocess)
+  - term: terminal functions via pyte
+  - web: basic requests interface
+  - file: basic file operations
 - --mcp "path/to/python/file": load a python file as an 'mcp', exposing global callables
 - --mcp "cmdline": use a mcp with stdio transport
 - --mcp "http://url_goes_here": use an http mcp (normal json-over-http transport)
 - --mcp "sse+https://url_goes_here": use an http mcp with sse
 - --mcp "3lo+https://url_goes_here": use an mcp with 3-legged oauth. includes sse+
 - -r/--reasoning <low/medium/high>: enable reasoning where available. this is not always required - check your inference provider.
-- -a/--agentic: experimental. load a json file for hatchery mode
-- --toolbox <name>: load a set of tools that start with name
-- --workers: enable asynchronous subagents (workers)
 ```
 
 For fine-grained MCP control, such as denying specific MCP functions or modifying their functionality with python hooks, see [skoomacat](docs/SKOOMACAT.md).

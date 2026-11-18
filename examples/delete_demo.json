@@ -1,27 +1,25 @@
 {
   "servers": [
-    "example.py"
+    "delete_demo.py"
   ],
   "tools": [
     {
       "type": "function",
-      "name": "get_flag",
+      "name": "delete_file",
       "description": "",
       "parameters": {
         "type": "object",
         "properties": {
-          "chall": {
+          "filename": {
             "type": "string",
             "description": ""
           }
         },
-        "required": [
-          "chall"
-        ],
+        "required": [],
         "additionalProperties": false
       }
     }
   ],
-  "prehooks": {"get_flag":"args[\"chall\"] = 999111"},
-  "posthooks": {"get_flag":"output('FLAG_BANANA_BOAT')"}
+  "prehooks": {"delete_file":"if args['filename'] != 'icecream.txt': block('blocked: you can only delete icecream.txt')"},
+  "posthooks":{}
 }

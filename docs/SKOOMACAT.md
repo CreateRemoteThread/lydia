@@ -25,7 +25,7 @@ An MCP client can then connect to the new mcp, http://localhost:8000/, which exp
 
 ## Function Hooks
 
-skoomacat supports pre and post hooking for MCP functions. Have a look in moonsugar/examples/hooks.json for how to define hooks. You can use this to "wrap" a function call in arbitrary python code, modifying the arguments passed to the function, skipping the function entirely or modifying the returned value.
+skoomacat supports pre and post hooking for MCP functions. Have a look in examples/delete_demo.json for how to define hooks. You can use this to "wrap" a function call in arbitrary python code, modifying the arguments passed to the function, skipping the function entirely or modifying the returned value.
 
 Prehooks and posthooks are run via 'exec'. To override the output of an MCP call in a posthook, use output(new_result).
 

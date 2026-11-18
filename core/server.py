@@ -6,18 +6,10 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MCPLoader = None
-API_PATH = "/"
-
-def setLogfile(logfile):
-  print("todo: implement stats and logging")
 
 def setMcpLoader(mcp_loader):
   global MCPLoader
   MCPLoader = mcp_loader
-
-def getDataPath(template_name):
-  file_path = os.path.join(os.path.dirname(__file__), "../moonsugar", template_name)
-  return file_path
 
 class MCPHandler(BaseHTTPRequestHandler):
   def _send_json(self, obj, status=200):
@@ -30,18 +22,6 @@ class MCPHandler(BaseHTTPRequestHandler):
 
   def do_POST(self):
     global MCPLoader
-    if self.path != API_PATH:
-      fn = getDataPath(self.path.lstrip("/"))
-      if not os.path.isfile(fn):
-        fn = getDataPath("error")
-      with open(fn,"rb") as f:
-        data = f.read()
-      self.send_response(200)
-      self.send_header("Content-Type", "text/html")
-      self.send_header("Content-Length", str(len(data)))
-      self.end_headers()
-      self.wfile.write(data)
-      return
     length = int(self.headers.get("Content-Length", "0"))
     body = self.rfile.read(length) if length else b"{}"
     try:
@@ -126,18 +106,6 @@ class MCPHandler(BaseHTTPRequestHandler):
     if self.path == "/favicon.ico":
       self.send_response(404)
       self.end_headers()
-      return
-    elif self.path != API_PATH:
-      fn = getDataPath(self.path.lstrip("/"))
-      if not os.path.isfile(fn):
-        fn = getDataPath("error")
-      with open(fn,"rb") as f:
-        data = f.read()
-      self.send_response(200)
-      self.send_header("Content-Type", "text/html")
-      self.send_header("Content-Length", str(len(data)))
-      self.end_headers()
-      self.wfile.write(data)
       return
     self._send_json({
       "name": "skooma-cat",

@@ -4,11 +4,8 @@ import sys
 import os
 from typing import Annotated
 import core.config
-import core.hatchery
 import core.memory
 import core.mcp
-import core.worker
-import tools
 import getopt
 import readline
 
@@ -16,18 +13,7 @@ def ask_user(question: Annotated[str, "The question"]):
   return input(question + " > ").strip()
 ask_user.__doc__ = "Ask the user a question"
 
-Toolbox = tools.ToolLoader(core.hatchery.Hatchery)
-
 MCPLoader = core.mcp.MCPLoader()
-
-def loadTool(toolName):
-  global Toolbox
-  r = Toolbox.fetch(toolName)
-  if r is None:
-    print("fatal: could not load tool '%s'" % toolName)
-    sys.exit(-1)
-  else:
-    return r
 
 def loadPrompt(prompt):
   # return prompt
@@ -44,23 +30,21 @@ def loadPrompt(prompt):
 
 def main():
   global Toolbox
-  CFG_ENABLE_WORKERS = False
   CFG_INTERACTIVE = False
   CFG_USR_PROMPT = None
   CFG_PERSONALITY = "You are a helpful assistant."
   CFG_SYS_PROMPT = ""
-  CFG_TOOLS = []
   CFG_MODEL = None
   CFG_REASONING = None
-  CFG_HATCHERY = None
-  DENIED_ALREADY = False
   core.config.defaultcfg()
-  args,extra = getopt.getopt(sys.argv[1:],"ic:p:s:t:m:r:a:",["cfg=","interactive","prompt=","system=","tool=","model=","reasoning=","persona=","toolbox=","agentic=","mcp=","mcp-deny=","workers"])
+  try:
+    args,extra = getopt.getopt(sys.argv[1:],"ic:p:s:m:r:",["cfg=","interactive","prompt=","system=","model=","reasoning=","persona=","mcp=","mcp-deny="])
+  except getopt.GetoptError as e:
+    print("getopt error: %s" % e)
+    sys.exit(0)
   for arg,val in args:
     if arg in ["-c","--cfg"]:
       core.config.initcfg(val)
-    elif arg == "--workers":
-      CFG_ENABLE_WORKERS = True
     elif arg in ["-p","--prompt"]:
       if CFG_USR_PROMPT is not None:
         print("fatal: do not supply -p twice")
@@ -69,15 +53,9 @@ def main():
     elif arg in ["-i","--interactive"]:
       CFG_INTERACTIVE = True
     elif arg == "--mcp":
-      if DENIED_ALREADY:
-        print("fatal: --mcp after --mcp-deny, load your mcp first")
-        sys.exit(0)
       MCPLoader.load_mcp(val)
     elif arg == "--mcp-deny":
-      DENIED_ALREADY = True
-      MCPLoader.deny_tool(val)
-    elif arg in ["-a","--agentic"]:
-      CFG_HATCHERY = val
+      MCPLoader.blacklist(val)
     elif arg in ["-r","--reasoning"]:
       if val in ["low","medium","high"]:
         CFG_REASONING = val
@@ -85,10 +63,6 @@ def main():
         print("warn: r must be 'low', 'medium' or 'high' - reasoning remains None")
     elif arg in ["-s","--sysprompt"]:
       CFG_SYS_PROMPT = loadPrompt(val)
-    elif arg in ["-t","--tool"]:
-      CFG_TOOLS.append(val)
-    elif arg == "--toolbox":
-      CFG_TOOLS += Toolbox.fetch_toolbox(val)
     elif arg in ["-m","--model"]:
       CFG_MODEL = val
     elif arg == "--persona":
@@ -98,40 +72,19 @@ def main():
           CFG_PERSONALITY = f.read()
       else:
         print("warn: cannot open persona '%s'" % val)
-  EXTRA_TOOLS = core.config.getcfg("EXTRA_TOOLS",default=[])
-  for tool in EXTRA_TOOLS:
-    CFG_TOOLS.append(tool) 
   if core.config.getenv("OFF_WITH_HER_HEAD",default=None) is None:
     from core.agent import Agent
   else:
     print("info: off with her head! using anthropic-compatible agent core")
     from core.messaging import Agent
-  # experimental behaviour change: 
-  ASK_USER_ARR = []
-  if CFG_ENABLE_WORKERS:
-    ASK_USER_ARR = [core.worker.create_worker]
-  # if core.config.getenv("STFU",default=None) is not None:
-  #   ASK_USER_ARR = []
-  # else:
-  #   ASK_USER_ARR = [ask_user]
   if CFG_MODEL is None:
     CFG_MODEL = core.config.getenv("OPENAI_DEFAULT_MODEL",default="gpt-4.1-mini-2025-04-14")
-  if CFG_HATCHERY is not None:
-    h = core.hatchery.Hatchery(CFG_HATCHERY)
-    h.run()
-    sys.exit(0)
   got_riskaccept =  core.config.getenv("I_ACCEPT_THE_RISK",default=None)
   got_cmdfw = core.config.getenv("CMD_FW",default=None)
   got_vmsshargs = core.config.getenv("VM_SSHARGS",default=None)
-  if (got_riskaccept is not None or got_cmdfw is not None or got_vmsshargs is not None) and len(CFG_TOOLS) == 0:
-    print("fatal: tool safety constraints enabled, but 0 tools selected")
-    sys.exit(-1)
   real_sys_prompt = " ".join([CFG_PERSONALITY,CFG_SYS_PROMPT])
-  agent = Agent(sys_prompt=real_sys_prompt,tools=[loadTool(v) for v in CFG_TOOLS] + ASK_USER_ARR,model=CFG_MODEL,reasoning=CFG_REASONING)
+  agent = Agent(sys_prompt=real_sys_prompt,model=CFG_MODEL,reasoning=CFG_REASONING)
   agent.set_mcploader(MCPLoader)
-  # Toolbox.execute_pytool_hooks(agent)
-  if CFG_ENABLE_WORKERS is True:
-    core.worker.__init_workers(agent)
   if CFG_USR_PROMPT is None:
     if CFG_INTERACTIVE is False:
       print("fatal: you must at least a user prompt with -p or use -i for interactive")
@@ -142,9 +95,6 @@ def main():
       if CFG_USR_PROMPT.startswith("!"):
         print("fatal: you cannot use core.memory.memory_dispatch with 0 memory")
         sys.exit(-1)
-  # if len(CFG_TOOLS) >= 1:
-  #   print("info: using tools, attaching prompt helper string")
-  #   # CFG_USR_PROMPT += 
   if CFG_INTERACTIVE is False:
     result = agent.req_loop(CFG_USR_PROMPT)
     print(result)

@@ -12,6 +12,7 @@ import random
 import string
 import copy
 import core.memory
+import core.mcp
 from typing import Dict
 
 import urllib3
@@ -86,7 +87,7 @@ def fn_to_tool_json(fn,tag=None):
     }
 
 class Agent:
-  def __init__(self, sys_prompt="You are a helpful assistant.", api_key=core.config.getenv("OPENAI_API_KEY",default=None), base_url=core.config.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, tools=[], reasoning=None,max_output_tokens=None):
+  def __init__(self, sys_prompt="You are a helpful assistant.", api_key=core.config.getenv("OPENAI_API_KEY",default=None), base_url=core.config.getenv("OPENAI_BASE_URL",default="https://api.openai.com/v1"), model="gpt-4o", timeout=300.0, reasoning=None,max_output_tokens=None):
     self._sz_memory = "input"
     self.asst_msg_queue = []
     self.api_key = api_key
@@ -113,10 +114,19 @@ class Agent:
     # output.
     if max_output_tokens is not None:
       self.req["max_output_tokens"] = max_output_tokens
-    self.tools = tools          # this is generic tools
 
+  def __deepcopy__(self, memo):
+    result = self.__class__.__new__(self.__class__)
+    memo[id(self)] = result
+    for key, value in self.__dict__.items():
+      if key == "mcploader":
+        setattr(result, key, core.mcp.MCPLoader())
+      else:
+        setattr(result, key, copy.deepcopy(value, memo))
+    return result
+  
   def duplicate(self):
-    return copy.copy(self)
+    return copy.deepcopy(self)
 
   def flush_history(self):
     self.asst_msg_queue = []
@@ -149,9 +159,6 @@ class Agent:
   def req_single(self,user_input=None):
     global MAX_RETRY, DEBUG_REQUESTS
     self.req["tools"] = []
-    if len(self.tools) > 0: 
-      for tl in self.tools:
-        self.req["tools"].append(fn_to_tool_json(tl))
     if self.mcploader is not None:
       self.req["tools"] += self.mcploader.get_json()
     if len(self.req["tools"]) == 0:
@@ -192,7 +199,7 @@ class Agent:
     print(data)
 
   def req_loop(self,user_input):
-    global DEBUG_REQUESTS    
+    global DEBUG_REQUESTS
     if DEBUG_REQUESTS is None:
       DEBUG_REQUESTS = core.config.getenv("DEBUG_REQUESTS",default=False)
       if DEBUG_REQUESTS is not False:
@@ -250,10 +257,6 @@ class Agent:
             print("agent: error laoding argument")
             print(resp_obj)
             sys.exit(0)
-          for i in self.tools:
-            if i.__name__ == fn_name:
-              fn_obj = i
-              break
           if fn_obj is None: # did not find the function
             if self.mcploader is None:
               print("fatal: could not execute call '%s'" % fn_name)
@@ -262,8 +265,8 @@ class Agent:
               print("info: attempting to pass to mcp loader")
               mcp_ret = self.mcploader.mcp_call(fn_name,fn_args)
               if mcp_ret is None:
-                print("fatal: could not execute (or find in mcp) function '%s'" % fn_name)
-                return "fatal: could not execute (or find in mcp) function '%s'" % fn_name
+                print("warn: mcp function '%s' forgot to return, overriding with 'ok'" % fn_name)
+                respval = "ok"
               else:
                 respval = str(mcp_ret)
           else: # found the function first pass
