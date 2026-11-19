@@ -17,6 +17,7 @@ import inspect
 from typing import Annotated, get_args, get_origin
 
 SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
+MAX_RESP_LEN = 1024 * 1024
 class Namespace:
   pass
 
@@ -281,9 +282,10 @@ class MCPHandlerPytool:
           print("mcp: found _load_pytool")
           self.pytool_hook = self.ns.__dict__[i]
         else:
-          print("mcp: got a callable '%s'" % i)
-          self.tool_names.append(i)
-          self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
+          if i != "Annotated" and i.startswith("__") is False:
+            print("mcp: got a callable '%s'" % i)
+            self.tool_names.append(i)
+            self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
 
   def fn_call(self,name,fn_args):
     print("mcp: calling pytool '%s'" % name)
@@ -475,7 +477,10 @@ class MCPLoader:
             nonlocal result
             result = arg
           exec(self.posthooks["*"],globals={"args":fn_args,"output":output})
-        return result
+        if len(result) <= MAX_RESP_LEN:
+          return result
+        else:
+          return "error: output too long (returned %d chars, max %d)" % (len(result),MAX_RESP_LEN)
         break
     print("mcp: could not find '%s'" % fn_name)
     return "error: could not find '%s'" % fn_name

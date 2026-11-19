@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+
+# single file pytomcp proxy
+
+import getopt
+import json
+import sys
+import inspect
+from typing import Annotated, get_args, get_origin
+
+def perror(str_in):
+  sys.stdout.write(str_in + "\n")
+  sys.stdout.flush()
+
+def fn_to_tool_json(fn,tag=None):
+  """
+  Convert an annotated Python function into an OpenAI Responses API tool schema.
+  """
+  sig = inspect.signature(fn)
+
+  properties = {}
+  required = []
+
+  type_map = {
+      str: "string",
+      int: "integer",
+      float: "number",
+      bool: "boolean",
+      list: "array",
+      dict: "object",
+  }
+
+  SKIP_FIRST = False
+  # arglist = sig.parameters.items()
+  # if tag is not None:
+  #   arglist = arglist[1:]
+  for name, param in sig.parameters.items():
+    if tag is not None and SKIP_FIRST is False:
+      SKIP_FIRST = True
+      continue
+    annotation = param.annotation
+    description = ""
+    py_type = str
+    # Handle Annotated[T, "description"]
+    if get_origin(annotation) is Annotated:
+      args = get_args(annotation)
+      py_type = args[0]
+      if len(args) > 1:
+        description = args[1]
+    else:
+      py_type = annotation
+
+    json_type = type_map.get(py_type, "string")
+
+    properties[name] = {
+      "type": json_type,
+      "description": description,
+    }
+
+    if param.default is inspect.Parameter.empty:
+      required.append(name)
+
+  fn_name = fn.__name__
+  if tag is not None:
+    fn_name += "-" + tag
+
+  return {
+    "type": "function",
+    "name": fn_name,
+    "description": inspect.getdoc(fn) or "",
+    "inputSchema": {
+      "type": "object",
+      "properties": properties,
+      "required": required,
+      "additionalProperties": False,
+    },
+  }
+
+class Namespace:
+  pass
+
+import os
+
+def send(message: dict) -> None:
+  sys.stdout.write(json.dumps(message) + "\n")
+  sys.stdout.flush()
+
+GLOBAL_FNS = []
+
+def handle_request(request):
+  global GLOBAL_FNS
+  method = request.get("method")
+  request_id = request.get("id")
+  if method == "initialize":
+    send({
+      "jsonrpc": "2.0",
+      "id": request_id,
+      "result": {
+        "protocolVersion": "2024-11-05",
+        "serverInfo": {
+          "name": "vaporeon",
+          "version": "0.0.1"
+        },
+        "capabilities": {
+          "tools": {}
+        }
+      }
+    })
+  elif method == "tools/list":
+    send({
+      "jsonrpc": "2.0",
+      "id": request_id,
+      "result": {
+        "tools": [fn_to_tool_json(f) for f in GLOBAL_FNS]
+      }
+    })
+  elif method == "tools/call":
+    params = request.get("params", {})
+    tool_name = params.get("name")
+    tool_args = params.get("arguments")
+    # sys.stderr.write(json.dumps(request,indent=2))
+    tool_fn = None
+    for t in GLOBAL_FNS:
+      if t.__name__ == tool_name:
+        tool_fn = t
+        break
+    result = tool_fn(**tool_args)
+    send({
+      "jsonrpc": "2.0",
+      "id": request_id,
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": result
+          }
+        ]
+      }
+    })
+
+def start_mcp():
+  for line in sys.stdin:
+    line = line.strip()
+    if not line:
+      continue
+    request = json.loads(line)
+    handle_request(request)
+
+
+def allowFunction(fn_name):
+  if fn_name == "Annotated":
+    return False
+  if fn_name.startswith("__"):
+    return False
+  else:
+    return True
+
+if __name__ == "__main__":
+  if len(sys.argv) != 2:
+    perror("usage: %s [pyfile]" % sys.argv[0])
+    sys.exit(-1)
+  if os.path.isfile(sys.argv[1]) is False:
+    perror("fatal: %s is not a file" % sys.argv[1])
+    sys.exit(0)
+  ns = Namespace()
+  with open(sys.argv[1]) as f:
+    code = f.read()
+  exec(code,ns.__dict__)
+  for i in ns.__dict__.keys():
+    if callable(ns.__dict__[i]):
+      fn_name = ns.__dict__[i].__name__
+      if allowFunction(fn_name):
+        GLOBAL_FNS.append(ns.__dict__[i])
+  start_mcp()
