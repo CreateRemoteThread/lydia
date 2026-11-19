@@ -98,7 +98,7 @@ def handle_request(request):
       "result": {
         "protocolVersion": "2024-11-05",
         "serverInfo": {
-          "name": "vaporeon",
+          "name": "skoomaden",
           "version": "0.0.1"
         },
         "capabilities": {
@@ -132,7 +132,7 @@ def handle_request(request):
         "content": [
           {
             "type": "text",
-            "text": result
+            "text": str(result)
           }
         ]
       }
