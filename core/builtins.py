@@ -25,6 +25,7 @@ import re
 SSL_VERIFY = core.config.getenv("SSL_VERIFY","True") == "True"
 MAX_DATA = 1024 * 1024 * 2
 RISK_ACCEPT = None
+VM_SSHARGS = None
 
 def risk_accept():
   global RISK_ACCEPT
