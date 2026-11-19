@@ -36,6 +36,13 @@ def risk_accept():
       RISK_ACCEPT = False
   return RISK_ACCEPT
 
+def vm_sshargs():
+  global VM_SSHARGS
+  if VM_SSHARGS is None:
+    VM_SSHARGS = core.config.getenv("VM_SSHARGS",default="")
+  else:
+    return VM_SSHARGS
+
 PROCESS_LOCK = None
 
 CMD_FW = None

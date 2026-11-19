@@ -358,6 +358,7 @@ class MCPLoader:
     self.tool_names = []
     self.mcp_alias_table = None
     self.tool_json = None
+    self.ns = Namespace() 
     self.prehooks = {}
     self.posthooks = {}
     self.bl_calls = []
@@ -453,12 +454,12 @@ class MCPLoader:
           call_blocked = arg
         if fn_name in self.prehooks.keys():
           print("mcp: running prehook ('%s')" % self.prehooks[fn_name])
-          exec(self.prehooks[fn_name],globals={"args":fn_args,"block":fn_block})
+          exec(self.prehooks[fn_name],locals={"args":fn_args,"block":fn_block},globals=self.ns.__dict__)
           if call_blocked is not None:
             return call_blocked
         if "*" in self.prehooks.keys():
           print("mcp: running global prehook ('%s')" % self.prehooks["*"])
-          exec(self.prehooks["*"],globals={"args":fn_args,"block":fn_block})
+          exec(self.prehooks["*"],locals={"args":fn_args,"block":fn_block},globals=self.ns.__dict__)
           if call_blocked is not None:
             return call_blocked
         result = mcp.fn_call(fn_name,fn_args)
