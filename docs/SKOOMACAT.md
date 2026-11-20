@@ -2,6 +2,16 @@
 
 ![skooma cat's whimsy!](img/skoomacat.png)
 
+## skoomaden
+
+Skoomaden is a light, no-dependency version of skoomacat - it's single purpose is to take any Python file and make it invokable by any MCP-compatible harness. Simply create a new MCP server that executes:
+
+```
+python3 skoomaden python_file_here.py
+```
+
+All callables not named "Annotated", and not starting with double underscore ("__"), will become MCP-invokable functions.
+
 ## Why?
 
 Let's say you want to use AI to browse a website, but you don't want to take screenshots because this makes your cost skyrocket. In traditional MCP use cases, you are reduced to a powerless slave, begging Masters Amodei and Altman to allow you the privilege of not tokenmaxxing by not calling take_screenshot

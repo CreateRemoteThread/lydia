@@ -446,7 +446,7 @@ class MCPLoader:
     if fn_name in self.fn_names:
       print("mcp: found in fn_names, passing to arbitrary function")
       fn_obj = self.fn_list[fn_name]
-      fn_obj(**fn_args)
+      return str(fn_obj(**fn_args))
     for mcp in self.mcplist:
       if fn_name in mcp.tool_names:
         print("mcp: found server hosting '%s'" % fn_name)

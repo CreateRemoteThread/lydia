@@ -198,7 +198,7 @@ class Agent:
     data = self.req_loop(user_input)
     print(data)
 
-  def req_loop(self,user_input):
+  def req_loop(self,user_input,max_think=-1):
     global DEBUG_REQUESTS
     if DEBUG_REQUESTS is None:
       DEBUG_REQUESTS = core.config.getenv("DEBUG_REQUESTS",default=False)
