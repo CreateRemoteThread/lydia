@@ -15,7 +15,8 @@ def try_get_callid(evt):
     return evt["call_id"]
   elif "content" in evt.keys():  # anthropic / messaging
     evc = evt["content"][0]
-    # print(evt["content"])
+    if isinstance(evc,str):
+      return None
     if evc["type"] == "tool_use":
       return evc["id"] 
     elif evc["type"] == "tool_result":
