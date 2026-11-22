@@ -150,8 +150,9 @@ class ResponseAgent(BaseAgent):
       hdr["x-portkey-provider"] = x_portkey_provider
     return hdr
 
-  def req_loop(self,user_input,max_think=-1):
+  def req_loop(self,user_input,effort_cap=None):
     global DEBUG_REQUESTS
+    turnctr = effort_cap
     if DEBUG_REQUESTS is None:
       DEBUG_REQUESTS = core.config.getenv("DEBUG_REQUESTS",default=False)
       if DEBUG_REQUESTS is not False:
@@ -176,6 +177,11 @@ class ResponseAgent(BaseAgent):
         print(RETN_DATA)
       RETN_DATA = None
       RETN_TOOL = False
+      if turnctr is not None:
+        turnctr -= 1
+        if turnctr <= 0:
+          print("warn: effort limit exceed (turns)")
+          return "error: effort limit exceeded"
       if send_user_input_once:
         resp = self.req_single(user_input)
         send_user_input_once = False
@@ -250,6 +256,11 @@ class ResponseAgent(BaseAgent):
           self.asst_msg_queue.append({"content":[{"type":"output_text","text":RETN_DATA}],"role":"assistant","type":"message"})
         elif resp_obj["type"] == "reasoning":
           print("Thinking...")
+          if turnctr is not None:
+            turnctr -= 1
+            if turnctr <= 0:
+              print("warn: effort limit exceed (thinking)")
+              return "error: effort limit exceeded"
         else:
           print("fatal: don't know how to handle response object type '%s'" % resp_obj["type"])
           sys.exit(-1)
@@ -289,8 +300,9 @@ class MessagingAgent(BaseAgent):
       sz_type = "text"
       self.req["messages"].append({"content":[{"type":sz_type,"text":user_input}],"role":"user"})
 
-  def req_loop(self,user_input,max_think=-1):
+  def req_loop(self,user_input,effort_cap=None):
     global DEBUG_REQUESTS
+    turnctr = effort_cap
     if DEBUG_REQUESTS is None:
       DEBUG_REQUESTS = core.config.getenv("DEBUG_REQUESTS",default=False)
       if DEBUG_REQUESTS is not False:
@@ -315,6 +327,11 @@ class MessagingAgent(BaseAgent):
         print(RETN_DATA)
       RETN_DATA = None
       RETN_TOOL = False
+      if turnctr is not None:
+        turnctr -= 1
+        if turnctr <= 0:
+          print("warn: effort limit exceed (turns)")
+          return "error: effort limit exceeded"
       if send_user_input_once:
         resp = self.req_single(user_input)
         send_user_input_once = False
@@ -389,6 +406,11 @@ class MessagingAgent(BaseAgent):
           self.asst_msg_queue.append({"role":"assistant","content":RETN_DATA})
         elif resp_obj["type"] == "reasoning" or resp_obj["type"] == "thinking":
           print("Thinking...")
+          if turnctr is not None:
+            turnctr -= 1
+            if turnctr <= 0:
+              print("warn: effort limit exceed (thinking)")
+              return "error: effort limit exceeded"
         else:
           print("fatal: don't know how to handle response object type '%s'" % resp_obj["type"])
           sys.exit(-1)

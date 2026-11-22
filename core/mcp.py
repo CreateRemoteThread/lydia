@@ -249,7 +249,7 @@ class MCPHandlerBuiltins:
           return True
       return False
     for i in self.ns.__dict__.keys():
-      if callable(self.ns.__dict__[i]):
+      if callable(self.ns.__dict__[i]) and inspect.isclass(self.ns.__dict__[i]) is False:
         if inFnList(i,fn_list):
           print("mcp: got a callable '%s'" % i)
           self.tool_names.append(i)
