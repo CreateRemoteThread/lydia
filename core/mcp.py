@@ -282,7 +282,7 @@ class MCPHandlerPytool:
           print("mcp: found _load_pytool")
           self.pytool_hook = self.ns.__dict__[i]
         else:
-          if i != "Annotated" and i.startswith("__") is False:
+          if i != "Annotated" and i.startswith("__") is False and inspect.isclass(self.ns.__dict__[i]) is False:
             print("mcp: got a callable '%s'" % i)
             self.tool_names.append(i)
             self.tools_json.append(fn_to_tool_json(self.ns.__dict__[i]))
