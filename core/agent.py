@@ -282,8 +282,11 @@ class MessagingAgent(BaseAgent):
       "Content-Type": "application/json",
       "User-Agent": "lydia/0.0.3"
     }
-    # "Authorization": f"Bearer {self.api_key}",
-    hdr["x-api-key"] = self.api_key  
+    if core.config.getenv("X_PORTKEY_PROVIDER",None) is not None:
+      hdr["Authorization"] = f"Bearer {self.api_key}"
+    else: 
+      hdr["x-api-key"] = self.api_key  
+      # "Authorization": f"Bearer {self.api_key}",
     hdr["anthropic-version"] = "2023-06-01"
     x_portkey_provider = core.config.getenv("X_PORTKEY_PROVIDER",default=None)
     if x_portkey_provider is not None:
