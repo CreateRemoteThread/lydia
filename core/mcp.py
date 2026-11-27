@@ -99,8 +99,13 @@ class MCPHandlerHttp:
     if resp.headers.get("Mcp-Session-Id",None) is not None:
       print("mcp: got mcp-session-id header")
       self._hdrs["Mcp-Session-Id"] = resp.headers.get("Mcp-Session-Id",None)
-    # print(resp.content)
-    return resp.json().get("result")
+    res = resp.json()
+    if "result" in res.keys():
+      return res["result"]
+    elif "error" in res.keys():
+      return {"content":res["error"]["message"]}
+    else:
+      return None
 
   def fn_call(self,name,params):
     r = self.send_request("tools/call",{"name":name,"arguments":params})
@@ -173,7 +178,13 @@ class MCPHandler3LO(MCPHandlerHttp):
         event["data"] = event.get("data","") + val.strip()
       else:
         event[field] = val
-    return json.loads(event["data"])["result"]
+    res = json.loads(event["data"])
+    if "result" in res.keys():
+      return res["result"]
+    elif "error" in res.keys():
+      return {"content":res["error"]["message"]}
+    else:
+      return None
 
   def __init__(self,url):
     self.url = url
@@ -206,7 +217,13 @@ class MCPHandlerSSE(MCPHandlerHttp):
         event["data"] = event.get("data","") + val.strip()
       else:
         event[field] = val
-    return json.loads(event["data"])["result"]
+    res = json.loads(event["data"])
+    if "result" in res.keys():
+      return res["result"]
+    elif "error" in res.keys():
+      return {"content":res["error"]["message"]}
+    else:
+      return None
 
   def get_credential(self,url,fn):
     with open(fn,"r") as f:
@@ -310,12 +327,17 @@ class MCPHandlerStdio:
       print(self.proc.stderr.read())
       sys.exit(-1)
     else:
-      return json.loads(line).get("result")
+      # print(json.loads(line))
+      res = json.loads(line)
+      if "result" in res.keys():
+        return res["result"]
+      elif "error" in res.keys():
+        return {"content":res["error"]["message"]}
+      else:
+        return None
 
   def fn_call(self,name,params):
-    # print("mcp: fn_call hit inside mcp handler")
     r = self.send_request("tools/call",{"name":name,"arguments":params})
-    # print(json.dumps({"name":name,"arguments":params},indent=2))
     try:
       cont = r.get("content")
     except:
